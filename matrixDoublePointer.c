@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdbool.h>
 
 void matrixInit() {
     srand((unsigned int) time(NULL));
@@ -55,6 +56,16 @@ void randomizeMatrix(int size, double ** mtx) {
     }
 }
 
+void constMatrix(int size, double ** mtx, int num) {
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            *(mtx[i] +j) = num;
+        }
+        
+    }
+}
+
+
 
 // Deletes the Matrix
 void deleteMatrix(double ** mtx) {
@@ -73,6 +84,30 @@ void printMatrix(double ** mtx, int rows, int cols) {
         printf("\n");
     }
 }
+
+// Copy a Matrix
+void copyMatrix(int rows, int cols, double ** mtxOrig, double ** mtxCopy) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            mtxCopy[i][j] = mtxOrig[i][j];
+        }
+    }
+}
+
+// Subtract a Matrix
+bool subtractMatrix(int rows, int cols, double ** mtx1, double ** mtx2) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            if (mtx1[i][j] - mtx2[i][j] != 0) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
+
 
 
 // Takes two square matrixes and multiplies them together and returns the product
@@ -97,42 +132,64 @@ double ** matrixProduct(double ** mtxA, double ** mtxB, double ** mtxC, int leng
     
 }
 
-// Evans double optimized
-double ** matrixProduct2(double ** mtxA, double ** mtxB, double ** mtxC, int length) {
+double ** matrixProductFix1(double ** mtxA, double ** mtxB, double ** mtxC, int length) {
     // If mtxA, mtxB, mtxC is NULL, return NULL
     if (!mtxA || !mtxB || !mtxC) {
         return NULL;
     }
     
-    // Perform the matrix multiplication;
-    int ii, kk, j, i, k;
-    double acc00, acc01, acc10, acc11;
-    int ib = 20;
-    int kb = 50;
-    for (ii = 0; ii < length; ii++) {
-        for (kk = 0; kk < length; kk ++) {
-            for ( j = 0; j < length; j++) {
-                for (i = ii; i < ii + ib; i += 2) {
-                    if (kk == 0) {
-                        acc00 = acc01 = acc10 = acc11 = 0;
-                    } else {
-                        acc00 = mtxC[i][j];
-                        acc01 = mtxC[i][j+1];
-                        acc10 = mtxC[i+1][j];
-                        acc11 = mtxC[i+1][j+1];
-                    }
-                    for (k = kk; k < kk + kb; k++) {
-                        acc00 += mtxA[i][k] * mtxB[k][j];
-                        acc01 += mtxA[i][k] * mtxB[k][j+1];
-                        acc10 += mtxA[i+1][k] * mtxB[k][j];
-                        acc11 += mtxA[i+1][k] * mtxB[k][j+1];
-                    }
-                    mtxC[i][j] = acc00;
-                    mtxC[i][j+1] = acc01;
-                    mtxC[i+1][j] = acc10;
-                    mtxC[i+1][j+1] = acc11;
-                }
+    double space00, space01, space10, space11;
+    
+    // Perform the matrix multiplication
+    for (int i = 0; i < length; i+=2) {
+        for (int j = 0; j < length ; j+=2) {
+            space00 = space01 = space10 = space11 = 0;
+            for (int k = 0; k < length ; k++) {
+                space00 += mtxA[i][k]*mtxB[k][j];
+                space01 += mtxA[i][k]*mtxB[k][j+1];
+                space10 += mtxA[i +1][k]*mtxB[k][j];
+                space11 += mtxA[i +1][k]*mtxB[k][j+1];
                 
+                
+            }
+            mtxC[i][j] = space00;
+            mtxC[i][j+1] = space01;
+            mtxC[i+1][j] = space10;
+            mtxC[i+1][j+1] = space11;
+        }
+    }
+    
+    // Return the result
+    return mtxC;
+    
+}
+
+double ** matrixProductFix2(double ** mtxA, double ** mtxB, double ** mtxC, int length) {
+    // If mtxA, mtxB, mtxC is NULL, return NULL
+    if (!mtxA || !mtxB || !mtxC) {
+        return NULL;
+    }
+    
+    double space00, space01, space10, space11;
+    int ib = 20;
+    
+    // Perform the matrix multiplication
+    for (int ii = 0; ii < length; ii+=ib) {
+        for (int j = 0; j < length ; j+=2) {
+            for (int i = ii; i < ii + ib; i+=2) {
+                space00 = space01 = space10 = space11 = 0;
+                for (int k = 0; k < length ; k++) {
+                    space00 += mtxA[i][k]*mtxB[k][j];
+                    space01 += mtxA[i][k]*mtxB[k][j+1];
+                    space10 += mtxA[i +1][k]*mtxB[k][j];
+                    space11 += mtxA[i +1][k]*mtxB[k][j+1];
+                    
+                    
+                }
+                mtxC[i][j] = space00;
+                mtxC[i][j+1] = space01;
+                mtxC[i+1][j] = space10;
+                mtxC[i+1][j+1] = space11;
             }
         }
     }
@@ -141,6 +198,55 @@ double ** matrixProduct2(double ** mtxA, double ** mtxB, double ** mtxC, int len
     return mtxC;
     
 }
+
+
+double ** matrixProductFix3(double ** mtxA, double ** mtxB, double ** mtxC, int length) {
+    // If mtxA, mtxB, mtxC is NULL, return NULL
+    if (!mtxA || !mtxB || !mtxC) {
+        return NULL;
+    }
+    
+    double space00, space01, space10, space11;
+    int ib = 20;
+    int kb = 50;
+    
+    // Perform the matrix multiplication
+    
+    for (int ii = 0; ii < length; ii+=ib) {
+        for (int kk = 0; kk < length; kk += kb) {
+            for (int j = 0; j < length ; j+=2) {
+                for (int i = ii; i < ii + ib; i+=2) {
+                    if (kk == 0) {
+                        space00 = space01 = space10 = space11 = 0;
+                    } else {
+                        space00 = mtxC[i][j];
+                        space01 = mtxC[i][j+1];
+                        space10 = mtxC[i+1][j];
+                        space11 = mtxC[i+1][j+1];
+                    }
+                    
+                    for (int k = kk; k < kk + kb ; k++) {
+                        space00 += mtxA[i][k]*mtxB[k][j];
+                        space01 += mtxA[i][k]*mtxB[k][j+1];
+                        space10 += mtxA[i +1][k]*mtxB[k][j];
+                        space11 += mtxA[i +1][k]*mtxB[k][j+1];
+                        
+                        
+                    }
+                    mtxC[i][j] = space00;
+                    mtxC[i][j+1] = space01;
+                    mtxC[i+1][j] = space10;
+                    mtxC[i+1][j+1] = space11;
+                }
+            }
+        }
+    }
+    
+    // Return the result
+    return mtxC;
+    
+}
+
 
 
 
