@@ -173,4 +173,31 @@ int main(int argc, const char * argv[]) {
     deleteMatrix(mtxTest1);
     deleteMatrix(mtxTest2);
     deleteMatrix(mtxTest3);
+    
+    // Large test of fix 3
+    int sizeLarge = 10000;
+    mtxA = newMatrix(sizeLarge, sizeLarge);
+    mtxB = newMatrix(sizeLarge, sizeLarge);
+    mtxC = newMatrix(sizeLarge, sizeLarge);
+    randomizeMatrix(testSize, mtxA);
+    randomizeMatrix(testSize, mtxB);
+    
+    printf("\n Starting the 10,000 by 10,000 Fix 3 \n");
+    // Start Clock
+    start_t = clock();
+    
+    // Multiply Matrixes using first implementation
+    matrixProductFix3(mtxA, mtxB, mtxC, sizeLarge);
+    
+    //  End clock
+    end_t = clock();
+    total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
+    
+    printf("\n");
+    printf("Total time taken by CPU for Case3: %lu\n", total_t);
+    
+    deleteMatrix(mtxA);
+    deleteMatrix(mtxB);
+    deleteMatrix(mtxC);
+    
 }

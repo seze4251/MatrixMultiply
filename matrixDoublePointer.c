@@ -247,6 +247,48 @@ double ** matrixProductFix3(double ** mtxA, double ** mtxB, double ** mtxC, int 
     
 }
 
+int max( int a, int b, int c) {
+    if (a > b && a > c) {
+        return a;
+    } else if ( b > c) {
+        return b;
+    } else {
+        return c;
+    }
+}
+
+double ** matrixProductCacheObliv(double ** mtxA, double ** mtxB, double ** mtxC, int n, int m, int p) {
+    // Saftey Checks
+    if (!mtxA || !mtxB || !mtxC) {
+        return NULL;
+    }
+    
+    // If matrix is small enough, calculate
+    if ((n * m) + (m * p) < 400 ) {
+        
+      //
+    } else {
+        // A_n,m  B_m,p
+        // Case 1
+        if (max(n, m, p) == n) {
+            // Split A horizonally
+            
+            
+        } else if (max(n, m, p) == m) {
+            // Split B Vertically
+            
+        } else {
+            // Split A vertically and B horizontally
+            
+        }
+        
+    }
+    
+    // Return the result
+    return mtxC;
+    
+}
+
 
 
 
