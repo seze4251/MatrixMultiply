@@ -36,7 +36,8 @@ double ** newMatrix(int rows, int cols) {
     mtx[0] = (double*) calloc(rows * cols, sizeof(double));
     
     // Sets every A value to be pointing to the 0th position of the next row
-    for (int n=1; n<rows; ++n) {
+    int n;
+    for ( n=1; n<rows; ++n) {
         mtx[n] = mtx[n-1]+ cols;
     }
     return mtx;
@@ -48,8 +49,9 @@ double ** newMatrix(int rows, int cols) {
 // Randomizes the values in a square matrix
 // int size = rows * cols
 void randomizeMatrix(int size, double ** mtx) {
-    for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
+        int i, j;
+    for ( i = 0; i < size; i++) {
+        for ( j = 0; j < size; j++) {
             *(mtx[i] +j) = rand();
         }
         
@@ -57,8 +59,9 @@ void randomizeMatrix(int size, double ** mtx) {
 }
 
 void constMatrix(int size, double ** mtx, int num) {
-    for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
+        int i, j;
+    for ( i = 0; i < size; i++) {
+        for ( j = 0; j < size; j++) {
             *(mtx[i] +j) = num;
         }
         
@@ -77,8 +80,9 @@ void deleteMatrix(double ** mtx) {
 // Prints the matrix
 void printMatrix(double ** mtx, int rows, int cols) {
     printf("\n");
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols ; j++) {
+        int i, j;
+    for ( i = 0; i < rows; i++) {
+        for ( j = 0; j < cols ; j++) {
             printf("%11.2f", mtx[i][j]);
         }
         printf("\n");
@@ -87,8 +91,9 @@ void printMatrix(double ** mtx, int rows, int cols) {
 
 // Copy a Matrix
 void copyMatrix(int rows, int cols, double ** mtxOrig, double ** mtxCopy) {
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
+        int i, j;
+    for ( i = 0; i < rows; i++) {
+        for ( j = 0; j < cols; j++) {
             mtxCopy[i][j] = mtxOrig[i][j];
         }
     }
@@ -96,8 +101,10 @@ void copyMatrix(int rows, int cols, double ** mtxOrig, double ** mtxCopy) {
 
 // Subtract a Matrix
 bool subtractMatrix(int rows, int cols, double ** mtx1, double ** mtx2) {
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
+    int i, j;
+
+    for ( i = 0; i < rows; i++) {
+        for ( j = 0; j < cols; j++) {
             if (mtx1[i][j] - mtx2[i][j] != 0) {
                 return false;
             }
@@ -117,11 +124,12 @@ double ** matrixProduct(double ** mtxA, double ** mtxB, double ** mtxC, int leng
     if (!mtxA || !mtxB || !mtxC) {
         return NULL;
     }
-    
+    int i, j, k;
+
     // Perform the matrix multiplication
-    for (int i = 0; i < length; i++) {
-        for (int j = 0; j < length ; j++) {
-            for (int k = 0; k < length ; k++) {
+    for (i = 0; i < length; i++) {
+        for ( j = 0; j < length ; j++) {
+            for ( k = 0; k < length ; k++) {
                 mtxC[i][j] = mtxC[i][j] + mtxA[i][k] * mtxB[k][j];
             }
         }
@@ -139,12 +147,13 @@ double ** matrixProductFix1(double ** mtxA, double ** mtxB, double ** mtxC, int 
     }
     
     double space00, space01, space10, space11;
-    
+    int i, j, k;
+
     // Perform the matrix multiplication
-    for (int i = 0; i < length; i+=2) {
-        for (int j = 0; j < length ; j+=2) {
+    for ( i = 0; i < length; i+=2) {
+        for ( j = 0; j < length ; j+=2) {
             space00 = space01 = space10 = space11 = 0;
-            for (int k = 0; k < length ; k++) {
+            for ( k = 0; k < length ; k++) {
                 space00 += mtxA[i][k]*mtxB[k][j];
                 space01 += mtxA[i][k]*mtxB[k][j+1];
                 space10 += mtxA[i +1][k]*mtxB[k][j];
@@ -172,13 +181,14 @@ double ** matrixProductFix2(double ** mtxA, double ** mtxB, double ** mtxC, int 
     
     double space00, space01, space10, space11;
     int ib = 20;
+    int ii, j, i, k;
     
     // Perform the matrix multiplication
-    for (int ii = 0; ii < length; ii+=ib) {
-        for (int j = 0; j < length ; j+=2) {
-            for (int i = ii; i < ii + ib; i+=2) {
+    for ( ii = 0; ii < length; ii+=ib) {
+        for ( j = 0; j < length ; j+=2) {
+            for ( i = ii; i < ii + ib; i+=2) {
                 space00 = space01 = space10 = space11 = 0;
-                for (int k = 0; k < length ; k++) {
+                for ( k = 0; k < length ; k++) {
                     space00 += mtxA[i][k]*mtxB[k][j];
                     space01 += mtxA[i][k]*mtxB[k][j+1];
                     space10 += mtxA[i +1][k]*mtxB[k][j];
@@ -209,13 +219,13 @@ double ** matrixProductFix3(double ** mtxA, double ** mtxB, double ** mtxC, int 
     double space00, space01, space10, space11;
     int ib = 20;
     int kb = 50;
-    
+    int ii, kk, j, i, k;
     // Perform the matrix multiplication
     
-    for (int ii = 0; ii < length; ii+=ib) {
-        for (int kk = 0; kk < length; kk += kb) {
-            for (int j = 0; j < length ; j+=2) {
-                for (int i = ii; i < ii + ib; i+=2) {
+    for (ii = 0; ii < length; ii+=ib) {
+        for (kk = 0; kk < length; kk += kb) {
+            for (j = 0; j < length ; j+=2) {
+                for (i = ii; i < ii + ib; i+=2) {
                     if (kk == 0) {
                         space00 = space01 = space10 = space11 = 0;
                     } else {
@@ -225,7 +235,7 @@ double ** matrixProductFix3(double ** mtxA, double ** mtxB, double ** mtxC, int 
                         space11 = mtxC[i+1][j+1];
                     }
                     
-                    for (int k = kk; k < kk + kb ; k++) {
+                    for (k = kk; k < kk + kb ; k++) {
                         space00 += mtxA[i][k]*mtxB[k][j];
                         space01 += mtxA[i][k]*mtxB[k][j+1];
                         space10 += mtxA[i +1][k]*mtxB[k][j];
