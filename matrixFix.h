@@ -20,8 +20,7 @@ typedef struct{
 void matrixInit();
 matrix * newMatrix(const int rows, const int cols);
 void randomizeMatrix(const matrix * mtx);
-void constMatrix(const matrix * mtx, const double value);
-void zeroMatrix(const matrix * mtx)
+void constMatrix(const matrix * mtx, double value);
 void deleteMatrix(matrix * mtx);
 void printMatrix(const matrix * mtx);
 matrix * copyMatrix(const matrix * mtx);
@@ -32,5 +31,6 @@ int matrixProductFix2(const matrix * mtxA, const matrix * mtxB, matrix * mtxC);
 int matrixProductFix3(const matrix * mtxA, const matrix * mtxB, matrix * mtxC);
 int max( int a, int b, int c);
 int matrixProductCacheObliv(const matrix * mtxA, const matrix * mtxB, matrix * mtxC, int startRA, int endRA, int startM, int endM, int startCB, int endCB);
+void zeroMatrix(const matrix * mtx);
 
 #endif /* matrixFix_h */

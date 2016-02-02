@@ -64,6 +64,7 @@ void constMatrix(const matrix * mtx, const double value) {
     }
 }
 
+/*
 void zeroMatrix(const matrix * mtx) {
     int i, j;
     
@@ -73,6 +74,7 @@ void zeroMatrix(const matrix * mtx) {
         }
     }
 }
+ */
 
 
 
