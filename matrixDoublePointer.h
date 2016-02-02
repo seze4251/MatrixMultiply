@@ -24,4 +24,12 @@ double ** matrixProductFix1(double ** mtxA, double ** mtxB, double ** mtxC, int 
 double ** matrixProductFix2(double ** mtxA, double ** mtxB, double ** mtxC, int length);
 double ** matrixProductFix3(double ** mtxA, double ** mtxB, double ** mtxC, int length);
 
+// Not Square Matrix FuNS
+
+void matrixProductNotSquare(double ** mtxA, double ** mtxB, double ** mtxC, int n, int m, int p);
+void matrixProductCacheObliv(double ** mtxA, double ** mtxB, double ** mtxC, int n, int m, int p, int startRA, int endRA, int startM, int endM, int startCB, int endCB);
+void randomizeMatrixNotSquare(int rows, int cols, double ** mtx);
+void constMatrixNonSquare(int row, int col, double ** mtx, int num);
+
+
 #endif /* matrixDoublePointer_h */
