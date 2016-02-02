@@ -19,7 +19,7 @@ int main(int argc, const char * argv[]) {
      //Test all basic Functions for Correctness
      //
      */
-    
+
     int m = 3, n = 4 , p = 5 ;
     matrix * mtxA, * mtxB, * mtxC, * mtxTest;
     
@@ -56,6 +56,7 @@ int main(int argc, const char * argv[]) {
     // Test Baseline: Matrix Mulplicaiton
     
     if (matrixProduct(mtxA, mtxB, mtxC) ) {
+        zeroMatrix(mtxC);
         int err = matrixProduct(mtxA, mtxB, mtxC);
         printf("Matrix Multiplication Baseline, Error Code: %d \n", err);
     }
@@ -67,9 +68,9 @@ int main(int argc, const char * argv[]) {
     // *************************************************
     
     
-    
     if (matrixProductFix1(mtxA, mtxB, mtxTest) ) {
-        int err = matrixProductFix1(mtxA, mtxB, mtxC);
+        zeroMatrix(mtxTest);
+        int err = matrixProductFix1(mtxA, mtxB, mtxTest);
         printf("Matrix Multiplication Fix 1, Error Code: %d \n", err);
     }
     
@@ -80,9 +81,11 @@ int main(int argc, const char * argv[]) {
     
     // Test Improvement 2
     // *************************************************
+    zeroMatrix(mtxTest);
     
     if (matrixProductFix2(mtxA, mtxB, mtxTest) ) {
-        int err = matrixProductFix2(mtxA, mtxB, mtxC);
+        zeroMatrix(mtxTest);
+        int err = matrixProductFix2(mtxA, mtxB, mtxTest);
         printf("Matrix Multiplication Fix 2, Error Code: %d \n", err);
     }
     
@@ -94,8 +97,11 @@ int main(int argc, const char * argv[]) {
     
     // Test Improvement 3
     // *************************************************
+    zeroMatrix(mtxTest);
+    
     if (matrixProductFix3(mtxA, mtxB, mtxTest) ) {
-        int err = matrixProductFix3(mtxA, mtxB, mtxC);
+        zeroMatrix(mtxTest);
+        int err = matrixProductFix3(mtxA, mtxB, mtxTest);
         printf("Matrix Multiplication Fix 3, Error Code: %d \n", err);
     }
     
@@ -133,14 +139,12 @@ int main(int argc, const char * argv[]) {
     start_t = clock();
     
     if (matrixProduct(mtxA, mtxB, mtxC) ) {
+        zeroMatrix(mtxC);
         int err = matrixProduct(mtxA, mtxB, mtxC);
         printf("Matrix Multiplication Baseline, Error Code: %d \n", err);
     }
     
     end_t = clock();
-    
-    printf("Matrix C =[A][B]:\n");
-    printMatrix(mtxC);
     printf("Total time taken by CPU for Baseline: %lu\n\n", total_t);
     
     // Test Improvement 1
@@ -168,11 +172,13 @@ int main(int argc, const char * argv[]) {
     
     // Test Improvement 2
     // *************************************************
+    zeroMatrix(mtxTest);
     
     start_t = clock();
     
     if (matrixProductFix2(mtxA, mtxB, mtxTest) ) {
-        int err = matrixProductFix2(mtxA, mtxB, mtxC);
+        zeroMatrix(mtxTest);
+        int err = matrixProductFix2(mtxA, mtxB, mtxTest);
         printf("Matrix Multiplication Fix 2, Error Code: %d \n", err);
     }
     
@@ -190,6 +196,8 @@ int main(int argc, const char * argv[]) {
     
     // Test Improvement 3
     // *************************************************
+    zeroMatrix(mtxTest);
+    
     start_t = clock();
     
     if (matrixProductFix3(mtxA, mtxB, mtxTest) ) {

@@ -64,6 +64,16 @@ void constMatrix(const matrix * mtx, const double value) {
     }
 }
 
+void zeroMatrix(const matrix * mtx) {
+    int i, j;
+    
+    for ( i = 0; i < mtx -> rows; i++) {
+        for ( j = 0; j < mtx -> cols; j++) {
+            ELEM(mtx,i,j) = 0;
+        }
+    }
+}
+
 
 
 // Deletes the Matrix

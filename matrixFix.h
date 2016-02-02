@@ -21,6 +21,7 @@ void matrixInit();
 matrix * newMatrix(const int rows, const int cols);
 void randomizeMatrix(const matrix * mtx);
 void constMatrix(const matrix * mtx, const double value);
+void zeroMatrix(const matrix * mtx)
 void deleteMatrix(matrix * mtx);
 void printMatrix(const matrix * mtx);
 matrix * copyMatrix(const matrix * mtx);
