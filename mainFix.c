@@ -19,6 +19,7 @@ int main(int argc, const char * argv[]) {
      //Test all basic Functions for Correctness
      //
      */
+    
     int m = 3, n = 4 , p = 5 ;
     matrix * mtxA, * mtxB, * mtxC, * mtxTest;
     
@@ -54,7 +55,7 @@ int main(int argc, const char * argv[]) {
     
     // Test Baseline: Matrix Mulplicaiton
     
-    if (!matrixProduct(mtxA, mtxB, mtxC) ) {
+    if (matrixProduct(mtxA, mtxB, mtxC) ) {
         int err = matrixProduct(mtxA, mtxB, mtxC);
         printf("Matrix Multiplication Baseline, Error Code: %d \n", err);
     }
@@ -67,12 +68,12 @@ int main(int argc, const char * argv[]) {
     
     
     
-    if (!matrixProductFix1(mtxA, mtxB, mtxTest) ) {
+    if (matrixProductFix1(mtxA, mtxB, mtxTest) ) {
         int err = matrixProductFix1(mtxA, mtxB, mtxC);
         printf("Matrix Multiplication Fix 1, Error Code: %d \n", err);
     }
     
-    if(! subtractMatrix(mtxC, mtxTest)) {
+    if(subtractMatrix(mtxC, mtxTest)) {
         printf("\n Matrix Product Fix 1 incorrect \n");
     }
     
@@ -80,12 +81,12 @@ int main(int argc, const char * argv[]) {
     // Test Improvement 2
     // *************************************************
     
-    if (!matrixProductFix2(mtxA, mtxB, mtxTest) ) {
+    if (matrixProductFix2(mtxA, mtxB, mtxTest) ) {
         int err = matrixProductFix2(mtxA, mtxB, mtxC);
         printf("Matrix Multiplication Fix 2, Error Code: %d \n", err);
     }
     
-    if(! subtractMatrix(mtxC, mtxTest)) {
+    if(subtractMatrix(mtxC, mtxTest)) {
         printf("\n Matrix Product Fix 2 incorrect \n");
         
     }
@@ -93,12 +94,12 @@ int main(int argc, const char * argv[]) {
     
     // Test Improvement 3
     // *************************************************
-    if (!matrixProductFix3(mtxA, mtxB, mtxTest) ) {
+    if (matrixProductFix3(mtxA, mtxB, mtxTest) ) {
         int err = matrixProductFix3(mtxA, mtxB, mtxC);
         printf("Matrix Multiplication Fix 3, Error Code: %d \n", err);
     }
     
-    if(! subtractMatrix(mtxC, mtxTest)) {
+    if(subtractMatrix(mtxC, mtxTest)) {
         printf("\n Matrix Product Fix 3 incorrect \n");
         
     }
@@ -131,7 +132,7 @@ int main(int argc, const char * argv[]) {
     
     start_t = clock();
     
-    if (!matrixProduct(mtxA, mtxB, mtxC) ) {
+    if (matrixProduct(mtxA, mtxB, mtxC) ) {
         int err = matrixProduct(mtxA, mtxB, mtxC);
         printf("Matrix Multiplication Baseline, Error Code: %d \n", err);
     }
@@ -147,7 +148,7 @@ int main(int argc, const char * argv[]) {
     
     start_t = clock();
     
-    if (!matrixProductFix1(mtxA, mtxB, mtxTest) ) {
+    if (matrixProductFix1(mtxA, mtxB, mtxTest) ) {
         int err = matrixProductFix1(mtxA, mtxB, mtxC);
         printf("Matrix Multiplication Fix 1, Error Code: %d \n", err);
     }
@@ -156,7 +157,7 @@ int main(int argc, const char * argv[]) {
     
     total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
     
-    if(! subtractMatrix(mtxC, mtxTest)) {
+    if(subtractMatrix(mtxC, mtxTest)) {
         printf("\n Matrix Product Fix 1 incorrect \n");
         
     }
@@ -170,7 +171,7 @@ int main(int argc, const char * argv[]) {
     
     start_t = clock();
     
-    if (!matrixProductFix2(mtxA, mtxB, mtxTest) ) {
+    if (matrixProductFix2(mtxA, mtxB, mtxTest) ) {
         int err = matrixProductFix2(mtxA, mtxB, mtxC);
         printf("Matrix Multiplication Fix 2, Error Code: %d \n", err);
     }
@@ -179,7 +180,7 @@ int main(int argc, const char * argv[]) {
     
     total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
     
-    if(! subtractMatrix(mtxC, mtxTest)) {
+    if(subtractMatrix(mtxC, mtxTest)) {
         printf("\n Matrix Product Fix 2 incorrect \n");
         
     }
@@ -191,7 +192,7 @@ int main(int argc, const char * argv[]) {
     // *************************************************
     start_t = clock();
     
-    if (!matrixProductFix3(mtxA, mtxB, mtxTest) ) {
+    if (matrixProductFix3(mtxA, mtxB, mtxTest) ) {
         int err = matrixProductFix3(mtxA, mtxB, mtxC);
         printf("Matrix Multiplication Fix 3, Error Code: %d \n", err);
     }
@@ -200,7 +201,7 @@ int main(int argc, const char * argv[]) {
     
     total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
     
-    if(! subtractMatrix(mtxC, mtxTest)) {
+    if(subtractMatrix(mtxC, mtxTest)) {
         printf("\n Matrix Product Fix 3 incorrect \n");
         
     }
