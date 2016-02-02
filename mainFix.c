@@ -10,13 +10,16 @@
 #include <stdlib.h>
 #include <time.h>
 #include <assert.h>
-#include "matrixfix.h"
+#include "matrixFix.h"
 
 
 int main(int argc, const char * argv[]) {
-    //Test all basic Functions
-    const int m = 3, n = 4 , p = 5 ;
-    clock_t start_t, end_t, total_t;
+    /*
+     //
+     //Test all basic Functions for Correctness
+     //
+     */
+    int m = 3, n = 4 , p = 5 ;
     matrix * mtxA, * mtxB, * mtxC, * mtxTest;
     
     mtxA = newMatrix(n, m);
@@ -50,14 +53,90 @@ int main(int argc, const char * argv[]) {
     printf("\n\n");
     
     // Test Baseline: Matrix Mulplicaiton
-       start_t = clock();
     
     if (!matrixProduct(mtxA, mtxB, mtxC) ) {
         int err = matrixProduct(mtxA, mtxB, mtxC);
         printf("Matrix Multiplication Baseline, Error Code: %d \n", err);
     }
     
-     end_t = clock();
+    printf("Matrix C =[A][B]:\n");
+    printMatrix(mtxC);
+    
+    // Test Improvement 1
+    // *************************************************
+    
+    
+    
+    if (!matrixProductFix1(mtxA, mtxB, mtxTest) ) {
+        int err = matrixProductFix1(mtxA, mtxB, mtxC);
+        printf("Matrix Multiplication Fix 1, Error Code: %d \n", err);
+    }
+    
+    if(! subtractMatrix(mtxC, mtxTest)) {
+        printf("\n Matrix Product Fix 1 incorrect \n");
+    }
+    
+    
+    // Test Improvement 2
+    // *************************************************
+    
+    if (!matrixProductFix2(mtxA, mtxB, mtxTest) ) {
+        int err = matrixProductFix2(mtxA, mtxB, mtxC);
+        printf("Matrix Multiplication Fix 2, Error Code: %d \n", err);
+    }
+    
+    if(! subtractMatrix(mtxC, mtxTest)) {
+        printf("\n Matrix Product Fix 2 incorrect \n");
+        
+    }
+    
+    
+    // Test Improvement 3
+    // *************************************************
+    if (!matrixProductFix3(mtxA, mtxB, mtxTest) ) {
+        int err = matrixProductFix3(mtxA, mtxB, mtxC);
+        printf("Matrix Multiplication Fix 3, Error Code: %d \n", err);
+    }
+    
+    if(! subtractMatrix(mtxC, mtxTest)) {
+        printf("\n Matrix Product Fix 3 incorrect \n");
+        
+    }
+    
+    
+    // Free all Memory
+    deleteMatrix(mtxA);
+    deleteMatrix(mtxB);
+    deleteMatrix(mtxC);
+    deleteMatrix(mtxTest);
+    
+    /*
+     //
+     //Test all basic Functions for Speed
+     //
+     */
+    
+    clock_t start_t, end_t, total_t;
+    n = 950;
+    m = 1531;
+    p = 779;
+
+    mtxA = newMatrix(n, m);
+    mtxB = newMatrix(m, p);
+    mtxC = newMatrix(n, p);
+    mtxTest = newMatrix(n, p);
+    
+    // Test Baseline: Matrix Mulplicaiton
+    // *************************************************
+    
+    start_t = clock();
+    
+    if (!matrixProduct(mtxA, mtxB, mtxC) ) {
+        int err = matrixProduct(mtxA, mtxB, mtxC);
+        printf("Matrix Multiplication Baseline, Error Code: %d \n", err);
+    }
+    
+    end_t = clock();
     
     printf("Matrix C =[A][B]:\n");
     printMatrix(mtxC);
@@ -69,7 +148,7 @@ int main(int argc, const char * argv[]) {
     start_t = clock();
     
     if (!matrixProductFix1(mtxA, mtxB, mtxTest) ) {
-        int err = matrixProduct1(mtxA, mtxB, mtxC);
+        int err = matrixProductFix1(mtxA, mtxB, mtxC);
         printf("Matrix Multiplication Fix 1, Error Code: %d \n", err);
     }
     
@@ -135,6 +214,7 @@ int main(int argc, const char * argv[]) {
     deleteMatrix(mtxB);
     deleteMatrix(mtxC);
     deleteMatrix(mtxTest);
-
+    
+    
     return 0;
 }
