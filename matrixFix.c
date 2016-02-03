@@ -24,10 +24,10 @@ matrix * newMatrix(const int rows, const int cols) {
         return NULL;
     }
     
-     matrix * mtx = (matrix *) malloc(sizeof(matrix));
-     mtx -> rows = rows;
-     mtx -> cols = cols;
-     mtx -> data = (double **) calloc(rows, sizeof(double *));
+    matrix * mtx = (matrix *) malloc(sizeof(matrix));
+    mtx -> rows = rows;
+    mtx -> cols = cols;
+    mtx -> data = (double **) calloc(rows, sizeof(double *));
     
     // The first position on A points to the start of the vector length row*col
     mtx -> data[0] = (double*) calloc(rows * cols, sizeof(double));
@@ -74,7 +74,7 @@ void zeroMatrix(const matrix * mtx) {
         }
     }
 }
- 
+
 
 
 
@@ -146,7 +146,7 @@ int matrixProduct(const matrix * mtxA, const matrix * mtxB, matrix * mtxC) {
         printf("Matrix C must be the correct size");
         return -3;
     }
-
+    
     int i, j, k;
     
     // Perform the matrix multiplication
@@ -157,7 +157,7 @@ int matrixProduct(const matrix * mtxA, const matrix * mtxB, matrix * mtxC) {
             }
         }
     }
-
+    
     // Return True
     return 0;
     
@@ -400,12 +400,17 @@ int matrixProductCacheObliv(const matrix * mtxA, const matrix * mtxB, matrix * m
             
         } else {
             // Split A vertically and B horizontally
-            
+            /*
             int c = (endCB -startCB) /2;
             int d = (endRA - startRA) /2;
             
             matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, d, startM, c - startCB, startCB, c);
             matrixProductCacheObliv(mtxA, mtxB, mtxC, d+1, endRA, endCB - c , endM, c+1, endCB);
+            */
+            
+            int c = (endM - startM) /2;
+            matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, startM, c, startCB, endCB);
+            matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, c +1, endM, startCB, endCB);
             return 0;
         }
     }

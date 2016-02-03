@@ -21,19 +21,19 @@ void testFUNCTIONS( int n, int m, int p, bool output);
 
 
 int main(int argc, const char * argv[]) {
-    int n = 500, m = 500, p = 500;
+    int n = 10, m = 10, p = 10;
     bool output = true;
     matrixInit();
     
     testCacheObliv(n, m, p, output);
     
     /*
-    testFUNCTIONS(n, m, p, output);
-    testBaseFun(n, m, p, output);
-    testFix1(n, m, p, output);
-    testFix2(n, m, p, output);
-    testFix3(n, m, p, output);
-    */
+     testFUNCTIONS(n, m, p, output);
+     testBaseFun(n, m, p, output);
+     testFix1(n, m, p, output);
+     testFix2(n, m, p, output);
+     testFix3(n, m, p, output);
+     */
     
     return 0;
 }
@@ -85,6 +85,8 @@ void testBaseFun(int n, int m, int p, bool output) {
     mtxA = newMatrix(n, m);
     mtxB = newMatrix(m, p);
     mtxC = newMatrix(n, p);
+    randomizeMatrix(mtxA);
+    randomizeMatrix(mtxB);
     mtxTest = newMatrix(n, p);
     
     start_t = clock();
@@ -96,7 +98,6 @@ void testBaseFun(int n, int m, int p, bool output) {
     }
     
     end_t = clock();
-	total_t = (end_t - start_t)/CLOCKS_PER_SEC;
     printf("Total time taken by CPU for Baseline: %lu\n\n", total_t);
     
     deleteMatrix(mtxA);
@@ -113,6 +114,8 @@ void testFix1(int n, int m, int p, bool output) {
     mtxB = newMatrix(m, p);
     mtxC = newMatrix(n, p);
     mtxTest = newMatrix(n, p);
+    randomizeMatrix(mtxA);
+    randomizeMatrix(mtxB);
     
     matrixProduct(mtxA, mtxB, mtxC);
     
@@ -148,9 +151,11 @@ void testFix2(int n, int m, int p, bool output) {
     mtxA = newMatrix(n, m);
     mtxB = newMatrix(m, p);
     mtxC = newMatrix(n, p);
+    randomizeMatrix(mtxA);
+    randomizeMatrix(mtxB);
     mtxTest = newMatrix(n, p);
     
-     matrixProduct(mtxA, mtxB, mtxC);
+    matrixProduct(mtxA, mtxB, mtxC);
     
     start_t = clock();
     
@@ -183,6 +188,8 @@ void testFix3(int n, int m, int p, bool output) {
     mtxB = newMatrix(m, p);
     mtxC = newMatrix(n, p);
     mtxTest = newMatrix(n, p);
+    randomizeMatrix(mtxA);
+    randomizeMatrix(mtxB);
     
     matrixProduct(mtxA, mtxB, mtxC);
     
@@ -219,6 +226,8 @@ void testCacheObliv(int n, int m, int p, bool output) {
     mtxB = newMatrix(m, p);
     mtxC = newMatrix(n, p);
     mtxTest = newMatrix(n, p);
+    randomizeMatrix(mtxA);
+    randomizeMatrix(mtxB);
     matrixProduct(mtxA, mtxB, mtxC);
     
     start_t = clock();
