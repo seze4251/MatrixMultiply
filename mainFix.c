@@ -21,7 +21,7 @@ void testFUNCTIONS( int n, int m, int p, bool output);
 
 
 int main(int argc, const char * argv[]) {
-    int n = 10, m = 10, p = 10;
+    int n = 500, m = 500, p = 500;
     bool output = true;
     matrixInit();
     
