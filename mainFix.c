@@ -96,6 +96,7 @@ void testBaseFun(int n, int m, int p, bool output) {
     }
     
     end_t = clock();
+	total_t = (end_t - start_t)/CLOCKS_PER_SEC;
     printf("Total time taken by CPU for Baseline: %lu\n\n", total_t);
     
     deleteMatrix(mtxA);
