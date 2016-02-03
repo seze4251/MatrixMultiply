@@ -2,9 +2,9 @@
 
 .PHONY: clean
 CC = gcc
-CFLAGS = -Wall -g  -c -O3
-LFLAGS = -Wall -g  -O3 -pg
-OBJS = main.o matrixDoublePointer.o
+CFLAGS = -Wall -g  -c 
+LFLAGS = -Wall -g  -pg
+OBJS = mainFix.o matrixFix.o
 
 matrixmult: $(OBJS)
 	$(CC) $(LFLAGS) -o $@ $^
@@ -12,9 +12,9 @@ matrixmult: $(OBJS)
 $(OBJS): %.o: %.c
 	$(CC) $(CFLAGS) $<
 
-main.o: matrixDoublePointer.h
+mainFix.o: matrixFix.h
 
-matrixDoublePoiner.o: matrixDoublePointer.h
+matrixFix.o: matrixFix.h
 
 clean:
 	rm -rf *.o matrixmult
