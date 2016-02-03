@@ -25,8 +25,8 @@ int main(int argc, const char * argv[]) {
     bool output = true;
     matrixInit();
     
-/*    testCacheObliv(n, m, p, output);
-*/	n = 20; m = 20; p = 20; output = false;
+    testCacheObliv(n, m, p, output);
+	n = 20; m = 20; p = 20; output = false;
 	testCacheObliv(n,m,p,output);
 	n = 1832; m = 1643; p = 883; output = false;
 	testCacheObliv(n,m,p,output);
