@@ -21,11 +21,15 @@ void testFUNCTIONS( int n, int m, int p, bool output);
 
 
 int main(int argc, const char * argv[]) {
-    int n = 10, m = 10, p = 10;
+    int n = 3, m = 6, p = 2;
     bool output = true;
     matrixInit();
     
-    testCacheObliv(n, m, p, output);
+/*    testCacheObliv(n, m, p, output);
+*/	n = 20; m = 20; p = 20; output = false;
+	testCacheObliv(n,m,p,output);
+	n = 1832; m = 1643; p = 883; output = false;
+	testCacheObliv(n,m,p,output);
     
     /*
      testFUNCTIONS(n, m, p, output);
@@ -98,6 +102,7 @@ void testBaseFun(int n, int m, int p, bool output) {
     }
     
     end_t = clock();
+	total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
     printf("Total time taken by CPU for Baseline: %lu\n\n", total_t);
     
     deleteMatrix(mtxA);
@@ -220,35 +225,46 @@ void testFix3(int n, int m, int p, bool output) {
 }
 
 void testCacheObliv(int n, int m, int p, bool output) {
+	// Declare Clock
     clock_t start_t, end_t, total_t;
+	// Declare and Init Matrixies
     matrix * mtxA, * mtxB, * mtxC, * mtxTest;
     mtxA = newMatrix(n, m);
     mtxB = newMatrix(m, p);
     mtxC = newMatrix(n, p);
     mtxTest = newMatrix(n, p);
-    randomizeMatrix(mtxA);
-    randomizeMatrix(mtxB);
+    constMatrix(mtxA,3);
+    constMatrix(mtxB,5);
     matrixProduct(mtxA, mtxB, mtxC);
     
+	// Perform Operation
     start_t = clock();
-    
-    if (matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, 0, 0, 0, 0, 0) ) {
-        zeroMatrix(mtxTest);
-        int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, 0, 0, 0, 0, 0);
-        printf("Matrix Multiplication Fix 3, Error Code: %d \n", err);
-    }
-    
+	int err = matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
     end_t = clock();
     
     total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
-    
-    
+    printf("Error code: %d\n",err);
+
+    // Test Correctness
     if(subtractMatrix(mtxC, mtxTest)) {
-        printf("\n Matrix Product Fix 3 incorrect \n");
+        printf("\n Matrix Product Cache Obliv incorrect \n");
     }
     
-    printf("Total time taken by CPU for Case3: %lu\n\n", total_t);
-    
+    printf("Total time taken by CPU for Cache Obliv: %lu\n\n", total_t);
+	
+	if ( output ) {
+    printf("Matrix A:\n");
+	printMatrix(mtxA);
+	printf("\n\n");
+	printf("Matrix B:\n");
+	printMatrix(mtxB);
+	printf("\n\n");
+    printf("mtx C \n");
+	printMatrix(mtxC);
+	printf("mtxTest\n");
+	printMatrix(mtxTest);
+	}
+
     deleteMatrix(mtxA);
     deleteMatrix(mtxB);
     deleteMatrix(mtxC);
