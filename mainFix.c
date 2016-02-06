@@ -30,10 +30,15 @@ int main(int argc, const char * argv[]) {
     int size = 2000;
     output = false;
     n = m = p = size;
+    printf("Base Started\n");
     testBaseFun(n, m, p, output);
+    printf("Test 1 Started\n");
     testFix1(n, m, p, output);
+    printf("Test 2 Started\n");
     testFix2(n, m, p, output);
+    printf("Test 3 Started\n");
     testFix3(n, m, p, output);
+    printf("Test Oblivious Started\n");
     testCacheObliv(n, m, p, output);
     
     // Test Cache Obliv Parallel
@@ -46,6 +51,10 @@ int main(int argc, const char * argv[]) {
      testFix1(n, m, p, output);
      testFix2(n, m, p, output);
      testFix3(n, m, p, output);
+     testCacheObliv(n, m, p, output);
+     testCacheOblivNonBlocking(n, m, p, output);
+     testCacheOblivBlocking(n, m, p, output);
+     testCacheOblivOpenMP(n, m, p, output);
      */
     
     return 0;
@@ -332,3 +341,4 @@ void testCacheObliv(int n, int m, int p, bool output) {
     deleteMatrix(mtxC);
     deleteMatrix(mtxTest);
 }
+
