@@ -347,7 +347,7 @@ int max( int a, int b, int c) {
 // Recursive Basic Cache Oblivious Algorithim
 int matrixProductCacheObliv(const matrix * mtxA, const matrix * mtxB, matrix * mtxC, int startRA, int endRA, int startM, int endM, int startCB, int endCB) {
     
-    const int maxDim = 8;
+    const int maxDim = 20;
     
     // If mtxA, mtxB, mtxC is NULL, return -1
     if (!mtxA || !mtxB) {
@@ -412,7 +412,7 @@ int matrixProductCacheObliv(const matrix * mtxA, const matrix * mtxB, matrix * m
 // Parallel - MPI Blocking
 int matrixProductCacheOblivBlocking(const matrix * mtxA, const matrix * mtxB, matrix * mtxC, int startRA, int endRA, int startM, int endM, int startCB, int endCB) {
     
-    const int maxDim = 8;
+    const int maxDim = 20;
     
     // If mtxA, mtxB, mtxC is NULL, return -1
     if (!mtxA || !mtxB) {
@@ -477,7 +477,7 @@ int matrixProductCacheOblivBlocking(const matrix * mtxA, const matrix * mtxB, ma
 // Parallel: Non-Blocking
 int matrixProductCacheOblivNonBlocking(const matrix * mtxA, const matrix * mtxB, matrix * mtxC, int startRA, int endRA, int startM, int endM, int startCB, int endCB) {
     
-    const int maxDim = 8;
+    const int maxDim = 20;
     
     // If mtxA, mtxB, mtxC is NULL, return -1
     if (!mtxA || !mtxB) {
@@ -542,7 +542,7 @@ int matrixProductCacheOblivNonBlocking(const matrix * mtxA, const matrix * mtxB,
 // Parallel Open MP
 int matrixProductCacheOblivOpenMp(const matrix * mtxA, const matrix * mtxB, matrix * mtxC, int startRA, int endRA, int startM, int endM, int startCB, int endCB) {
     
-    const int maxDim = 8;
+    const int maxDim = 20;
     
     // If mtxA, mtxB, mtxC is NULL, return -1
     if (!mtxA || !mtxB) {

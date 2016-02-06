@@ -30,16 +30,18 @@ int main(int argc, const char * argv[]) {
     int size = 2000;
     output = false;
     n = m = p = size;
+    printf("Test Oblivious Started\n");
+    testCacheObliv(n, m, p, output);
+    printf("Test 3 Started\n");
+    testFix3(n, m, p, output);
     printf("Base Started\n");
     testBaseFun(n, m, p, output);
     printf("Test 1 Started\n");
     testFix1(n, m, p, output);
     printf("Test 2 Started\n");
     testFix2(n, m, p, output);
-    printf("Test 3 Started\n");
-    testFix3(n, m, p, output);
-    printf("Test Oblivious Started\n");
-    testCacheObliv(n, m, p, output);
+    
+    
     
     // Test Cache Obliv Parallel
     
