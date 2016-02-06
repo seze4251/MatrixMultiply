@@ -21,15 +21,40 @@ void testFUNCTIONS( int n, int m, int p, bool output);
 
 
 int main(int argc, const char * argv[]) {
-    int n = 3, m = 6, p = 2;
-    bool output = true;
-    matrixInit();
-    
+	// Initialize
+	matrixInit();
+	int n, m, p;
+	bool output;
+
+	// Test
+	// Case 1
+/*	n = 3; m = 6; p = 2; output = true;
+	printf("Test1, n = 3, m = 6, p = 2 \n");
     testCacheObliv(n, m, p, output);
-	n = 20; m = 20; p = 20; output = false;
+
+	// Case 2:
+	printf("Test2, n = 19, m = 19, p = 19\n");
+	n = 19; m = 19; p = 19; output = false;
+	testCacheObliv(n, m, p, output);
+
+*/	//Case 3
+	
+	printf("Test 3, n = 8, m = 7, p = 7\n");
+	n = 8; m = 7; p = 7; output = true;
 	testCacheObliv(n,m,p,output);
-	n = 1832; m = 1643; p = 883; output = false;
+	// Case 4
+    
+	printf("Test 4, n = 7, m = 8, p = 7 \n");
+	n = 7; m = 8; p = 7; output = true;
 	testCacheObliv(n,m,p,output);
+	// Case 5
+	
+	printf("Test 5, n = 7 m = 7 p = 8");
+	n = 7; m = 7; p = 8; output = true;
+	testCacheObliv(n,m,p,output);
+
+//	n = 1832; m = 1643; p = 883; output = false;
+//	testCacheObliv(n,m,p,output);
     
     /*
      testFUNCTIONS(n, m, p, output);

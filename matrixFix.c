@@ -347,7 +347,7 @@ int max( int a, int b, int c) {
 // Call by passing in mtxA, mtxB, mtxC and 0s for the next terms
 int matrixProductCacheObliv(const matrix * mtxA, const matrix * mtxB, matrix * mtxC, int startRA, int endRA, int startM, int endM, int startCB, int endCB) {
     
-    const int maxDim = 20;
+    const int maxDim = 8;
 
     //printf("Really?\n");
 
@@ -399,7 +399,7 @@ int matrixProductCacheObliv(const matrix * mtxA, const matrix * mtxB, matrix * m
             
             
             matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, c, startM, endM, startCB, endCB);
-            matrixProductCacheObliv(mtxA, mtxB, mtxC, c + 1, endRA, startM, endM, startCB, endCB);
+            matrixProductCacheObliv(mtxA, mtxB, mtxC, c, endRA, startM, endM, startCB, endCB);
             return 0;
             
         } else if (max( (endRA - startRA), (endM - startM), (endCB -startCB) ) ==  (endCB -startCB)) {
@@ -407,7 +407,7 @@ int matrixProductCacheObliv(const matrix * mtxA, const matrix * mtxB, matrix * m
             int c = startCB + (endCB -startCB) /2;
             
             matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, startM, endM, startCB, c);
-            matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, startM, endM, c+1, endCB);
+            matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, startM, endM, c, endCB);
             return 0;
             
         } else {
@@ -422,7 +422,7 @@ int matrixProductCacheObliv(const matrix * mtxA, const matrix * mtxB, matrix * m
             
             int c = startM + (endM - startM) /2;
             matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, startM, c, startCB, endCB);
-            matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, c +1, endM, startCB, endCB);
+            matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, c, endM, startCB, endCB);
             return 0;
         }
     }
