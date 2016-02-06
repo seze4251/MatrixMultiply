@@ -21,40 +21,24 @@ void testFUNCTIONS( int n, int m, int p, bool output);
 
 
 int main(int argc, const char * argv[]) {
-	// Initialize
-	matrixInit();
-	int n, m, p;
-	bool output;
-
-	// Test
-	// Case 1
-/*	n = 3; m = 6; p = 2; output = true;
-	printf("Test1, n = 3, m = 6, p = 2 \n");
-    testCacheObliv(n, m, p, output);
-
-	// Case 2:
-	printf("Test2, n = 19, m = 19, p = 19\n");
-	n = 19; m = 19; p = 19; output = false;
-	testCacheObliv(n, m, p, output);
-
-*/	//Case 3
-	
-	printf("Test 3, n = 8, m = 7, p = 7\n");
-	n = 8; m = 7; p = 7; output = true;
-	testCacheObliv(n,m,p,output);
-	// Case 4
+    // Initialize
+    matrixInit();
+    int n, m, p;
+    bool output;
     
-	printf("Test 4, n = 7, m = 8, p = 7 \n");
-	n = 7; m = 8; p = 7; output = true;
-	testCacheObliv(n,m,p,output);
-	// Case 5
-	
-	printf("Test 5, n = 7 m = 7 p = 8");
-	n = 7; m = 7; p = 8; output = true;
-	testCacheObliv(n,m,p,output);
-
-//	n = 1832; m = 1643; p = 883; output = false;
-//	testCacheObliv(n,m,p,output);
+    // Speed Test of square Matrix
+    int size = 2000;
+    output = false;
+    n = m = p = size;
+    testBaseFun(n, m, p, output);
+    testFix1(n, m, p, output);
+    testFix2(n, m, p, output);
+    testFix3(n, m, p, output);
+    testCacheObliv(n, m, p, output);
+    
+    // Test Cache Obliv Parallel
+    
+    
     
     /*
      testFUNCTIONS(n, m, p, output);
@@ -101,6 +85,7 @@ void testFUNCTIONS( int n, int m, int p, bool output) {
         printf("\n\n");
     }
     
+    
     deleteMatrix(mtxA);
     deleteMatrix(mtxB);
     deleteMatrix(mtxC);
@@ -127,8 +112,21 @@ void testBaseFun(int n, int m, int p, bool output) {
     }
     
     end_t = clock();
-	total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
+    total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
     printf("Total time taken by CPU for Baseline: %lu\n\n", total_t);
+    
+    if ( output ) {
+        printf("Matrix A:\n");
+        printMatrix(mtxA);
+        printf("\n\n");
+        printf("Matrix B:\n");
+        printMatrix(mtxB);
+        printf("\n\n");
+        printf("mtx C \n");
+        printMatrix(mtxC);
+        printf("mtxTest\n");
+        printMatrix(mtxTest);
+    }
     
     deleteMatrix(mtxA);
     deleteMatrix(mtxB);
@@ -166,6 +164,19 @@ void testFix1(int n, int m, int p, bool output) {
     }
     
     printf("Total time taken by CPU for Case1: %lu\n\n", total_t);
+    
+    if ( output ) {
+        printf("Matrix A:\n");
+        printMatrix(mtxA);
+        printf("\n\n");
+        printf("Matrix B:\n");
+        printMatrix(mtxB);
+        printf("\n\n");
+        printf("mtx C \n");
+        printMatrix(mtxC);
+        printf("mtxTest\n");
+        printMatrix(mtxTest);
+    }
     
     deleteMatrix(mtxA);
     deleteMatrix(mtxB);
@@ -205,6 +216,19 @@ void testFix2(int n, int m, int p, bool output) {
     
     printf("Total time taken by CPU for Case2: %lu\n\n", total_t);
     
+    if ( output ) {
+        printf("Matrix A:\n");
+        printMatrix(mtxA);
+        printf("\n\n");
+        printf("Matrix B:\n");
+        printMatrix(mtxB);
+        printf("\n\n");
+        printf("mtx C \n");
+        printMatrix(mtxC);
+        printf("mtxTest\n");
+        printMatrix(mtxTest);
+    }
+    
     deleteMatrix(mtxA);
     deleteMatrix(mtxB);
     deleteMatrix(mtxC);
@@ -243,6 +267,19 @@ void testFix3(int n, int m, int p, bool output) {
     
     printf("Total time taken by CPU for Case3: %lu\n\n", total_t);
     
+    if ( output ) {
+        printf("Matrix A:\n");
+        printMatrix(mtxA);
+        printf("\n\n");
+        printf("Matrix B:\n");
+        printMatrix(mtxB);
+        printf("\n\n");
+        printf("mtx C \n");
+        printMatrix(mtxC);
+        printf("mtxTest\n");
+        printMatrix(mtxTest);
+    }
+    
     deleteMatrix(mtxA);
     deleteMatrix(mtxB);
     deleteMatrix(mtxC);
@@ -250,9 +287,9 @@ void testFix3(int n, int m, int p, bool output) {
 }
 
 void testCacheObliv(int n, int m, int p, bool output) {
-	// Declare Clock
+    // Declare Clock
     clock_t start_t, end_t, total_t;
-	// Declare and Init Matrixies
+    // Declare and Init Matrixies
     matrix * mtxA, * mtxB, * mtxC, * mtxTest;
     mtxA = newMatrix(n, m);
     mtxB = newMatrix(m, p);
@@ -262,34 +299,34 @@ void testCacheObliv(int n, int m, int p, bool output) {
     constMatrix(mtxB,5);
     matrixProduct(mtxA, mtxB, mtxC);
     
-	// Perform Operation
+    // Perform Operation
     start_t = clock();
-	int err = matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
+    int err = matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
     end_t = clock();
     
     total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
     printf("Error code: %d\n",err);
-
+    
     // Test Correctness
     if(subtractMatrix(mtxC, mtxTest)) {
         printf("\n Matrix Product Cache Obliv incorrect \n");
     }
     
     printf("Total time taken by CPU for Cache Obliv: %lu\n\n", total_t);
-	
-	if ( output ) {
-    printf("Matrix A:\n");
-	printMatrix(mtxA);
-	printf("\n\n");
-	printf("Matrix B:\n");
-	printMatrix(mtxB);
-	printf("\n\n");
-    printf("mtx C \n");
-	printMatrix(mtxC);
-	printf("mtxTest\n");
-	printMatrix(mtxTest);
-	}
-
+    
+    if ( output ) {
+        printf("Matrix A:\n");
+        printMatrix(mtxA);
+        printf("\n\n");
+        printf("Matrix B:\n");
+        printMatrix(mtxB);
+        printf("\n\n");
+        printf("mtx C \n");
+        printMatrix(mtxC);
+        printf("mtxTest\n");
+        printMatrix(mtxTest);
+    }
+    
     deleteMatrix(mtxA);
     deleteMatrix(mtxB);
     deleteMatrix(mtxC);

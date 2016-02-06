@@ -212,12 +212,12 @@ int matrixProductFix1(const matrix * mtxA, const matrix * mtxB, matrix * mtxC) {
 }
 
 int min(int a, int b) {
-	if ( a > b ) {
-		return a;
-		} else {
-		return b;
-		}
-	}
+    if ( a > b ) {
+        return a;
+    } else {
+        return b;
+    }
+}
 
 int matrixProductFix2(const matrix * mtxA, const matrix * mtxB, matrix * mtxC) {
     // If mtxA, mtxB, mtxC is NULL, return -1
@@ -243,7 +243,7 @@ int matrixProductFix2(const matrix * mtxA, const matrix * mtxB, matrix * mtxC) {
     
     // Perform the matrix multiplication
     for ( ii = 0; ii < mtxA -> rows; ii+=ib) {
-	    int counter = min( (ii + ib), mtxA -> rows );
+        int counter = min( (ii + ib), mtxA -> rows );
         for ( j = 0; j < mtxB -> cols; j+=2) {
             for ( i = ii; i < counter; i+=2) {
                 
@@ -344,43 +344,34 @@ int max( int a, int b, int c) {
 }
 
 
-// Call by passing in mtxA, mtxB, mtxC and 0s for the next terms
+// Recursive Basic Cache Oblivious Algorithim
 int matrixProductCacheObliv(const matrix * mtxA, const matrix * mtxB, matrix * mtxC, int startRA, int endRA, int startM, int endM, int startCB, int endCB) {
     
     const int maxDim = 8;
-
-    //printf("Really?\n");
-
+    
     // If mtxA, mtxB, mtxC is NULL, return -1
     if (!mtxA || !mtxB) {
         return -1;
     }
-
-	// printf("Yeah really.\n");
     
     // If mtxA and mtxB are not the correct size, return -2
     if (mtxA -> cols != mtxB -> rows) {
         printf("Matrix A cols must equal Matrix B rows");
         return -2;
     }
-
-	//printf("I don't buy it.\n");
     
     // If mtxC is not the correct size, return -3
     if (mtxC -> rows != mtxA -> rows || mtxC -> cols != mtxB -> cols ) {
         printf("Matrix C must be the correct size");
         return -3;
     }
-
-	// printf("Jerkwad.\n");
     
     if ( ((endRA - startRA) < maxDim) && ((endM - startM) < maxDim) && ((endCB -startCB) < maxDim) ) {
         int i, j, k;
         
-       // printf("Howdy!\n");
-		// Perform the matrix multiplication
+        // Perform the matrix multiplication
         for (i = startRA; i < endRA; i++) {
-			for ( k = startM; k < endM ; k++) {
+            for ( k = startM; k < endM ; k++) {
                 for ( j = startCB; j < endCB ; j++) {
                     ELEM(mtxC,i,j) +=  ELEM(mtxA,i,k) * ELEM(mtxB,k,j);
                 }
@@ -390,36 +381,26 @@ int matrixProductCacheObliv(const matrix * mtxA, const matrix * mtxB, matrix * m
         return 0;
         
     } else {
-        // A_n,m  B_m,p
-        // Case 1
         
         if ( max( (endRA - startRA), (endM - startM), (endCB -startCB) ) ==  (endRA - startRA)) {
             // Split A horizonally
+            
             int c = startRA + (endRA - startRA) /2; // integers automatically floor in C
-            
-            
             matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, c, startM, endM, startCB, endCB);
             matrixProductCacheObliv(mtxA, mtxB, mtxC, c, endRA, startM, endM, startCB, endCB);
             return 0;
             
         } else if (max( (endRA - startRA), (endM - startM), (endCB -startCB) ) ==  (endCB -startCB)) {
             // Split B Vertically
-            int c = startCB + (endCB -startCB) /2;
             
+            int c = startCB + (endCB -startCB) /2;
             matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, startM, endM, startCB, c);
             matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, startM, endM, c, endCB);
             return 0;
             
         } else {
-            // Split A vertically and B horizontally
-            /*
-            int c = (endCB -startCB) /2;
-            int d = (endRA - startRA) /2;
             
-            matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, d, startM, c - startCB, startCB, c);
-            matrixProductCacheObliv(mtxA, mtxB, mtxC, d+1, endRA, endCB - c , endM, c+1, endCB);
-            */
-            
+            // Split the Columns in A and the Rows in B
             int c = startM + (endM - startM) /2;
             matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, startM, c, startCB, endCB);
             matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, c, endM, startCB, endCB);
