@@ -32,11 +32,11 @@ int main(int argc, const char * argv[]) {
     }
     
     // Set up Output File
-    FILE file1 = fopen("outputTestBase.txt", "a");
-    FILE file2 = fopen("outputTest1.txt", "a");
-    FILE file3 = fopen("outputTest2.txt", "a");
-    FILE file4 = fopen("outputTest3.txt", "a");
-    FILE file5 = fopen("outputTestCache.txt", "a");
+    FILE * file1 = fopen("outputTestBase.txt", "a");
+    FILE * file2 = fopen("outputTest1.txt", "a");
+    FILE * file3 = fopen("outputTest2.txt", "a");
+    FILE * file4 = fopen("outputTest3.txt", "a");
+    FILE * file5 = fopen("outputTestCache.txt", "a");
     // Speed Test of square Matrix
     int test = atoi(argv[1]);
     output = false;
