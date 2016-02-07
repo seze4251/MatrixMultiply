@@ -156,8 +156,6 @@ void testFix1(int n, int m, int p, bool output, FILE * file) {
     randomizeMatrix(mtxA);
     randomizeMatrix(mtxB);
     
-    matrixProduct(mtxA, mtxB, mtxC);
-    
     start_t = clock();
     
     int err = matrixProductFix1(mtxA, mtxB, mtxTest);
@@ -170,6 +168,7 @@ void testFix1(int n, int m, int p, bool output, FILE * file) {
     
     if ( output ) {
         mtxC = newMatrix(n, p);
+            matrixProduct(mtxA, mtxB, mtxC);
         if(subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Fix 1 incorrect \n");
         }
