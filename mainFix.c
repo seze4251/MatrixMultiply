@@ -28,7 +28,8 @@ int main(int argc, const char * argv[]) {
     
     // Test Input
     if (argc != 2) {
-        printf("Must take input of integer for matrix size");
+        printf("Must take input of integer for matrix size\n");
+		return -1;
     }
     int test = atoi(argv[1]);
     printf("n = %d\n",test);
