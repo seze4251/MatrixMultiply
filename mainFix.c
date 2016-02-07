@@ -30,7 +30,8 @@ int main(int argc, const char * argv[]) {
     if (argc != 2) {
         printf("Must take input of integer for matrix size");
     }
-    
+	int test = atoi(argv[1]);
+	printf("n = %d",test);
     // Set up Output File
     FILE * file1 = fopen("outputTestBase.txt", "a");
     FILE * file2 = fopen("outputTest1.txt", "a");
@@ -38,14 +39,14 @@ int main(int argc, const char * argv[]) {
     FILE * file4 = fopen("outputTest3.txt", "a");
     FILE * file5 = fopen("outputTestCache.txt", "a");
     // Speed Test of square Matrix
-    int test = atoi(argv[1]);
+
     output = false;
-    n = m = p = test;
-    
+   	n = m = p = test;
+
     testBaseFun(n, m, p, output, file1);
     testFix1(n, m, p, output, file2);
-    testFix2(n, m, p, output, file3);
-    testFix3(n, m, p, output, file4);
+//    testFix2(n, m, p, output, file3);
+//    testFix3(n, m, p, output, file4);
     testCacheObliv(n, m, p, output, file5);
     
     fclose(file1);
@@ -138,8 +139,6 @@ void testBaseFun(int n, int m, int p, bool output, FILE * file) {
         printf("\n\n");
         printf("mtx C \n");
         printMatrix(mtxC);
-        printf("mtxTest\n");
-        printMatrix(mtxTest);
     }
     
     deleteMatrix(mtxA);
