@@ -306,8 +306,8 @@ void testCacheObliv(int n, int m, int p, bool output) {
     mtxB = newMatrix(m, p);
     mtxC = newMatrix(n, p);
     mtxTest = newMatrix(n, p);
-    constMatrix(mtxA,3);
-    constMatrix(mtxB,5);
+    randomizeMatrix(mtxA);
+    randomizeMatrix(mtxB);
     matrixProduct(mtxA, mtxB, mtxC);
     
     // Perform Operation

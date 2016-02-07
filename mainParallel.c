@@ -11,6 +11,7 @@
 #include <time.h>
 #include "matrixFix.h"
 #include <stdbool.h>
+#include <mpi.h>
 
 void testCacheObliv(int n, int m, int p, bool output);
 void testCacheOblivNonBlocking(int n, int m, int p, bool output);
@@ -18,17 +19,90 @@ void testCacheOblivBlocking(int n, int m, int p, bool output);
 void testCacheOblivOpenMP(int n, int m, int p, bool output);
 
 
+// Requires command line input of m, n, and p
+// Assume Square Matrix Divisible by 4, n = m = p and divisible by 4
 int main(int argc, const char * argv[]) {
-    // Initialize
-    matrixInit();
-    int n, m, p;
-    bool output;
-  
-    // Test Cache Obliv Parallel
+    
+    if (argc != 4) {
+        printf("Please enter 3 integers on the command line for n, m, and p");
+        return -1;
+    }
+    
+    int n = atoi(argv[1]);
+    int m = atoi(argv[2]);
+    int p = atoi(argv[3]);
+    
+    if (n < 1 || m < 1 || p < 1) {
+        printf("n, m, and p must be greater or equal to 1");
+        return -2;
+    }
+    
+    int nprocs, myrank, tag = 8;
+    const int serverRank = 0;
+    MPI_Status status;
+    // Initialize MPI
+    MPI_Init(&argc, &argv);
+    
+    // Determine # of procs and my rank
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+    
+    
+    // Declare Matrixes
+    matrix * mtxA = newMatrix(n, m);
+    matrix * mtxB = newMatrix(m, p);
+    matrix * mtxC = newmatrix(n, p);
+    
+    // Declare MPI_Matrix Data Type
+    
+    if (myrank == serverRank) {
+        // Have Server Process randomize matrix up matrix
+        randomizeMatrix(mtxA);
+        randomizeMatrix(mtxB);
+        
+        // Broadcast 3 Matrixes to all processes
+        MPI_Bcast(* mtxA, , MPI_Matrix, serverRank, MPI_COMM_WORLD);
+        MPI_Bcast(* mtxB, sizeof(* mtxB), MPI_Matrix, serverRank, MPI_COMM_WORLD);
+        MPI_Bcast(* mtxC, sizeof(* mtxC), MPI_Matrix, serverRank, MPI_COMM_WORLD);
+    }else {
+        // Have all other proccesses receive matrix
+        matrix * mtxA, * mtxB, * mtxC;
+        
+        MPI_Recv(* mtxA, sizeof(* mtxA), MPI_Matrix,
+                 serverRank, tag, MPI_COMM_WORLD, status);
+        
+        MPI_Recv(* mtxB, sizeof(* mtxB), MPI_Matrix,
+                 serverRank, tag, MPI_COMM_WORLD, status);
+        
+        MPI_Recv(* mtxC, sizeof(* mtxC), MPI_Matrix,
+                 serverRank, tag, MPI_COMM_WORLD, status);
+        
+    }
     
     
     
-    /*
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    /*    // Initialize
+     matrixInit();
+     int n, m, p;
+     bool output;
+     
+     // Test Cache Obliv Parallel
+     
+     
+     
+     
      testCacheObliv(n, m, p, output);
      testCacheOblivNonBlocking(n, m, p, output);
      testCacheOblivBlocking(n, m, p, output);
@@ -47,8 +121,8 @@ void testCacheObliv(int n, int m, int p, bool output) {
     mtxB = newMatrix(m, p);
     mtxC = newMatrix(n, p);
     mtxTest = newMatrix(n, p);
-    constMatrix(mtxA,3);
-    constMatrix(mtxB,5);
+    randomizeMatrix(mtxA);
+    randomizeMatrix(mtxB);
     matrixProduct(mtxA, mtxB, mtxC);
     
     // Perform Operation
@@ -94,8 +168,8 @@ void testCacheOblivBlocking(int n, int m, int p, bool output) {
     mtxB = newMatrix(m, p);
     mtxC = newMatrix(n, p);
     mtxTest = newMatrix(n, p);
-    constMatrix(mtxA,3);
-    constMatrix(mtxB,5);
+    randomizeMatrix(mtxA);
+    randomizeMatrix(mtxB);
     matrixProduct(mtxA, mtxB, mtxC);
     
     // Perform Operation
@@ -141,8 +215,8 @@ void testCacheOblivNonBlocking(int n, int m, int p, bool output) {
     mtxB = newMatrix(m, p);
     mtxC = newMatrix(n, p);
     mtxTest = newMatrix(n, p);
-    constMatrix(mtxA,3);
-    constMatrix(mtxB,5);
+    randomizeMatrix(mtxA);
+    randomizeMatrix(mtxB);
     matrixProduct(mtxA, mtxB, mtxC);
     
     // Perform Operation
@@ -188,8 +262,8 @@ void testCacheOblivOpenMP(int n, int m, int p, bool output) {
     mtxB = newMatrix(m, p);
     mtxC = newMatrix(n, p);
     mtxTest = newMatrix(n, p);
-    constMatrix(mtxA,3);
-    constMatrix(mtxB,5);
+    randomizeMatrix(mtxA);
+    randomizeMatrix(mtxB);
     matrixProduct(mtxA, mtxB, mtxC);
     
     // Perform Operation
