@@ -243,7 +243,7 @@ int matrixProductFix2(const matrix * mtxA, const matrix * mtxB, matrix * mtxC) {
     
     // Perform the matrix multiplication
     for ( ii = 0; ii < mtxA -> rows; ii+=ib) {
-        int counter = min( (ii + ib), mtxA -> rows );
+        int counter = (ii + ib); //min( (ii + ib), mtxA -> rows );
         for ( j = 0; j < mtxB -> cols; j+=2) {
             for ( i = ii; i < counter; i+=2) {
                 
