@@ -12,12 +12,12 @@
 #include "matrixFix.h"
 #include <stdbool.h>
 
-void testCacheObliv(int n, int m, int p, bool output, FILE file);
-void testFix3(int n, int m, int p, bool output, FILE file);
-void testFix2(int n, int m, int p, bool output, FILE file);
-void testFix1(int n, int m, int p, bool output, FILE file);
-void testBaseFun(int n, int m, int p, bool output, FILE file);
-void testFUNCTIONS( int n, int m, int p, bool output, FILE file);
+void testCacheObliv(int n, int m, int p, bool output, FILE * file);
+void testFix3(int n, int m, int p, bool output, FILE * file);
+void testFix2(int n, int m, int p, bool output, FILE * file);
+void testFix1(int n, int m, int p, bool output, FILE * file);
+void testBaseFun(int n, int m, int p, bool output, FILE * file);
+void testFUNCTIONS( int n, int m, int p, bool output, FILE * file);
 
 
 int main(int argc, const char * argv[]) {
@@ -69,7 +69,7 @@ int main(int argc, const char * argv[]) {
     return 0;
 }
 
-void testFUNCTIONS( int n, int m, int p, bool output, FILE file) {
+void testFUNCTIONS( int n, int m, int p, bool output, FILE * file) {
     matrix * mtxA, * mtxB, * mtxC, * mtxTest;
     mtxA = newMatrix(n, m);
     mtxB = newMatrix(m, p);
@@ -111,7 +111,7 @@ void testFUNCTIONS( int n, int m, int p, bool output, FILE file) {
     
 }
 
-void testBaseFun(int n, int m, int p, bool output, FILE file) {
+void testBaseFun(int n, int m, int p, bool output, FILE * file) {
     clock_t start_t, end_t, total_t;
     matrix * mtxA, * mtxB, * mtxC, * mtxTest;
     mtxA = newMatrix(n, m);
@@ -147,7 +147,7 @@ void testBaseFun(int n, int m, int p, bool output, FILE file) {
     deleteMatrix(mtxC);
 }
 
-void testFix1(int n, int m, int p, bool output, FILE file) {
+void testFix1(int n, int m, int p, bool output, FILE * file) {
     clock_t start_t, end_t, total_t;
     matrix * mtxA, * mtxB, * mtxC, * mtxTest;
     mtxA = newMatrix(n, m);
@@ -194,7 +194,7 @@ void testFix1(int n, int m, int p, bool output, FILE file) {
 
 
 
-void testFix2(int n, int m, int p, bool output, FILE file) {
+void testFix2(int n, int m, int p, bool output, FILE * file) {
     clock_t start_t, end_t, total_t;
     matrix * mtxA, * mtxB, * mtxC, * mtxTest;
     mtxA = newMatrix(n, m);
@@ -242,7 +242,7 @@ void testFix2(int n, int m, int p, bool output, FILE file) {
     deleteMatrix(mtxTest);
 }
 
-void testFix3(int n, int m, int p, bool output, FILE file) {
+void testFix3(int n, int m, int p, bool output, FILE * file) {
     clock_t start_t, end_t, total_t;
     matrix * mtxA, * mtxB, * mtxC, * mtxTest;
     mtxA = newMatrix(n, m);
@@ -292,7 +292,7 @@ void testFix3(int n, int m, int p, bool output, FILE file) {
     deleteMatrix(mtxTest);
 }
 
-void testCacheObliv(int n, int m, int p, bool output, FILE file) {
+void testCacheObliv(int n, int m, int p, bool output, FILE * file) {
     // Declare Clock
     clock_t start_t, end_t, total_t;
     // Declare and Init Matrixies
