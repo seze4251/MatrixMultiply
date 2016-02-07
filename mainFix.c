@@ -32,16 +32,16 @@ int main(int argc, const char * argv[]) {
     }
     
     // Set up Output File
-        FILE file1 = fopen("outputTestBase.txt", "a")
-        FILE file2 = fopen("outputTest1.txt", "a")
-        FILE file3 = fopen("outputTest2.txt", "a")
-        FILE file4 = fopen("outputTest3.txt", "a")
-        FILE file5 = fopen("outputTestCache.txt", "a")
+    FILE file1 = fopen("outputTestBase.txt", "a");
+    FILE file2 = fopen("outputTest1.txt", "a");
+    FILE file3 = fopen("outputTest2.txt", "a");
+    FILE file4 = fopen("outputTest3.txt", "a");
+    FILE file5 = fopen("outputTestCache.txt", "a");
     // Speed Test of square Matrix
     int test = atoi(argv[1]);
     output = false;
     n = m = p = test;
-
+    
     testBaseFun(n, m, p, output, file1);
     testFix1(n, m, p, output, file2);
     testFix2(n, m, p, output, file3);
@@ -126,7 +126,7 @@ void testBaseFun(int n, int m, int p, bool output, FILE file) {
     
     end_t = clock();
     total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
-   // printf(file,"Error code: %d\n",err);
+    // printf(file,"Error code: %d\n",err);
     printf(file, "%d \t\t %lu\n\n",m, total_t);
     
     if ( output ) {
@@ -152,7 +152,7 @@ void testFix1(int n, int m, int p, bool output, FILE file) {
     matrix * mtxA, * mtxB, * mtxC, * mtxTest;
     mtxA = newMatrix(n, m);
     mtxB = newMatrix(m, p);
-
+    
     mtxTest = newMatrix(n, p);
     randomizeMatrix(mtxA);
     randomizeMatrix(mtxB);
@@ -161,7 +161,7 @@ void testFix1(int n, int m, int p, bool output, FILE file) {
     
     start_t = clock();
     
-   int err = matrixProductFix1(mtxA, mtxB, mtxTest);
+    int err = matrixProductFix1(mtxA, mtxB, mtxTest);
     
     end_t = clock();
     
@@ -170,7 +170,7 @@ void testFix1(int n, int m, int p, bool output, FILE file) {
     printf(file, "%d \t\t %lu\n\n",m, total_t);
     
     if ( output ) {
-            mtxC = newMatrix(n, p);
+        mtxC = newMatrix(n, p);
         if(subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Fix 1 incorrect \n");
         }
@@ -184,7 +184,7 @@ void testFix1(int n, int m, int p, bool output, FILE file) {
         printMatrix(mtxC);
         printf("mtxTest\n");
         printMatrix(mtxTest);
-            deleteMatrix(mtxC);
+        deleteMatrix(mtxC);
     }
     
     deleteMatrix(mtxA);
@@ -199,26 +199,26 @@ void testFix2(int n, int m, int p, bool output, FILE file) {
     matrix * mtxA, * mtxB, * mtxC, * mtxTest;
     mtxA = newMatrix(n, m);
     mtxB = newMatrix(m, p);
-
+    
     randomizeMatrix(mtxA);
     randomizeMatrix(mtxB);
     mtxTest = newMatrix(n, p);
     
-
+    
     
     start_t = clock();
     
     int err = matrixProductFix2(mtxA, mtxB, mtxTest);
     
     end_t = clock();
-        total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
+    total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
     
     // printf(file,"Error code: %d\n",err);
     printf(file, "%d \t\t %lu\n\n",m, total_t);
     
     if ( output ) {
-            mtxC = newMatrix(n, p);
-            matrixProduct(mtxA, mtxB, mtxC);
+        mtxC = newMatrix(n, p);
+        matrixProduct(mtxA, mtxB, mtxC);
         
         if(subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Fix 2 incorrect \n");
@@ -234,7 +234,7 @@ void testFix2(int n, int m, int p, bool output, FILE file) {
         printMatrix(mtxC);
         printf("mtxTest\n");
         printMatrix(mtxTest);
-            deleteMatrix(mtxC);
+        deleteMatrix(mtxC);
     }
     
     deleteMatrix(mtxA);
@@ -247,19 +247,19 @@ void testFix3(int n, int m, int p, bool output, FILE file) {
     matrix * mtxA, * mtxB, * mtxC, * mtxTest;
     mtxA = newMatrix(n, m);
     mtxB = newMatrix(m, p);
-
+    
     mtxTest = newMatrix(n, p);
     randomizeMatrix(mtxA);
     randomizeMatrix(mtxB);
     
-
+    
     
     
     start_t = clock();
     
-        int err = matrixProductFix3(mtxA, mtxB, mtxTest);
+    int err = matrixProductFix3(mtxA, mtxB, mtxTest);
     
-
+    
     
     end_t = clock();
     
@@ -268,8 +268,8 @@ void testFix3(int n, int m, int p, bool output, FILE file) {
     printf(file, "%d \t\t %lu\n\n",m, total_t);
     
     if ( output ) {
-            mtxC = newMatrix(n, p);
-            matrixProduct(mtxA, mtxB, mtxC);
+        mtxC = newMatrix(n, p);
+        matrixProduct(mtxA, mtxB, mtxC);
         if(subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Fix 3 incorrect \n");
         }
@@ -284,7 +284,7 @@ void testFix3(int n, int m, int p, bool output, FILE file) {
         printMatrix(mtxC);
         printf("mtxTest\n");
         printMatrix(mtxTest);
-            deleteMatrix(mtxC);
+        deleteMatrix(mtxC);
     }
     
     deleteMatrix(mtxA);
@@ -302,7 +302,7 @@ void testCacheObliv(int n, int m, int p, bool output, FILE file) {
     mtxTest = newMatrix(n, p);
     randomizeMatrix(mtxA);
     randomizeMatrix(mtxB);
-
+    
     
     // Perform Operation
     start_t = clock();
@@ -314,8 +314,8 @@ void testCacheObliv(int n, int m, int p, bool output, FILE file) {
     printf(file, "%d \t\t %lu\n\n",m, total_t);
     
     if ( output ) {
-            mtxC = newMatrix(n, p);
-            matrixProduct(mtxA, mtxB, mtxC);
+        mtxC = newMatrix(n, p);
+        matrixProduct(mtxA, mtxB, mtxC);
         // Test Correctness
         if(subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Cache Obliv incorrect \n");
