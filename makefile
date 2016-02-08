@@ -2,8 +2,8 @@
 
 .PHONY: clean
 CC = gcc
-CFLAGS = -Wall -g  -c 
-LFLAGS = -Wall -g  -pg
+CFLAGS = -Wall -O3  -c  
+LFLAGS = -Wall -O3  
 OBJS = mainFix.o matrixFix.o
 
 matrixmult: $(OBJS)
