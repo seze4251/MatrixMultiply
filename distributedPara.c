@@ -84,7 +84,7 @@ int main(int argc, const char * argv[]) {
         } else {
             // Scatter A without Seg Fault
             int i;
-            for (int i = 1; i < nprocs - 1; i++) {
+            for (i = 1; i < nprocs - 1; i++) {
                 MPI_Scatter(mtxA -> data[scatterSize -1], scatterSize -1, MPI_DOUBLE, mtxA -> data[0], m/nprocs -1, serverRank, MPI_COMM_WORLD);
             }
             MPI_Send(mtxA -> data[ scatterSize * (nprocs -1)], scatterSize - rem -1, MPI_DOUBLE, nprocs -1, tag,
@@ -156,7 +156,7 @@ int main(int argc, const char * argv[]) {
 
 void testCacheObliv(int n, int m, int p, bool output) {
     // Declare Clock
-    clock_t start_t, end_t, total_t;
+   // clock_t start_t, end_t, total_t;
     // Declare and Init Matrixies
     matrix * mtxA, * mtxB, * mtxC, * mtxTest;
     mtxA = newMatrix(n, m);
@@ -168,11 +168,11 @@ void testCacheObliv(int n, int m, int p, bool output) {
     matrixProduct(mtxA, mtxB, mtxC);
     
     // Perform Operation
-    start_t = clock();
+   // start_t = clock();
     
-    end_t = clock();
+   // end_t = clock();
     
-    total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
+   // total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
     printf("Error code: %d\n",err);
     
     
