@@ -10,11 +10,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "matrixFix.h"
-#include <stdbool.h>
 #include <mpi.h>
-
-void testCacheObliv(int n, int m, int p, bool output);
-
 
 
 // Requires command line input of m, n, and p
@@ -154,30 +150,5 @@ int main(int argc, const char * argv[]) {
     return 0;
 }
 
-void testCacheObliv(int n, int m, int p, bool output) {
-    // Declare Clock
-   // clock_t start_t, end_t, total_t;
-    // Declare and Init Matrixies
-    matrix * mtxA, * mtxB, * mtxC, * mtxTest;
-    mtxA = newMatrix(n, m);
-    mtxB = newMatrix(m, p);
-    mtxC = newMatrix(n, p);
-    
-    randomizeMatrix(mtxA);
-    randomizeMatrix(mtxB);
-    matrixProduct(mtxA, mtxB, mtxC);
-    
-    // Perform Operation
-   // start_t = clock();
-    
-   // end_t = clock();
-    
-   // total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
-    printf("Error code: %d\n",err);
-    
-    
-    
-    
-}
 
 
