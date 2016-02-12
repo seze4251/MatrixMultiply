@@ -19,7 +19,8 @@ int main(int argc, const char * argv[]) {
     
     //Initialize Base Vars
     int nprocs, myrank;
-    const int serverRank = 0;
+	int tag = 0;  // What is the purpose of this, is this a message identifier that I should do something with?
+	const int serverRank = 0;
     MPI_Status status;
     
     // Initialize MPI
@@ -76,15 +77,17 @@ int main(int argc, const char * argv[]) {
         if (rem == 0) {
             // Scatter A
             int scatterSize = m/nprocs;
-            MPI_Scatter(mtxA -> data[scatterSize -1], scatterSize -1, MPI_DOUBLE, mtxA -> data[0], m/nprocs -1, serverRank, MPI_COMM_WORLD);
+// To Few Arguments Here
+MPI_Scatter(mtxA -> data[scatterSize -1], scatterSize -1, MPI_DOUBLE, mtxA -> data[0], m/nprocs -1, serverRank, MPI_COMM_WORLD);
         } else {
             // Scatter A without Seg Fault
             int i;
             for (i = 1; i < nprocs - 1; i++) {
-                MPI_Scatter(mtxA -> data[scatterSize -1], scatterSize -1, MPI_DOUBLE, mtxA -> data[0], m/nprocs -1, serverRank, MPI_COMM_WORLD);
+            // To Few Arguments Here Aswell
+			MPI_Scatter(mtxA -> data[scatterSize -1], scatterSize -1, MPI_DOUBLE, mtxA -> data[0], m/nprocs -1, serverRank, MPI_COMM_WORLD);
             }
             MPI_Send(mtxA -> data[ scatterSize * (nprocs -1)], scatterSize - rem -1, MPI_DOUBLE, nprocs -1, tag,
-                     MPI_COMM_WORLD)
+                     MPI_COMM_WORLD);
         }
         
         // Reset mtxA and mtxC
@@ -105,8 +108,8 @@ int main(int argc, const char * argv[]) {
             
         }
         
-        MPI_Recv(mtx, sizeof(* mtxA), MPI_Matrix,
-                 serverRank, tag, MPI_COMM_WORLD, status);
+		// Not confident in these commands
+        MPI_Recv(mtxC,serverRank, tag, MPI_COMM_WORLD, status);
         
         MPI_Recv(* mtxB, sizeof(* mtxB), MPI_Matrix,
                  serverRank, tag, MPI_COMM_WORLD, status);
@@ -128,19 +131,20 @@ int main(int argc, const char * argv[]) {
         
     } else {
         // Send Back All other cases
-        MPI_Gather( mtxC -> data[0],   , MPI_DOUBLE, mtxC -> data [0],   , MPI_DOUBLE, serverRank, MPI_COMM_WORLD);
+        MPI_Gather( mtxC -> data[0], (mtxC -> rows * mtxC -> cols) -1, MPI_DOUBLE, mtxC -> data [0], (mtxC -> rows * mtxC -> cols ) -1, MPI_DOUBLE, serverRank, MPI_COMM_WORLD);
         
     }
     
     MPI_Barrier;
-    
+	// Why would mtxA and mtxB be undeclared if I used them earlier ??    
     if (myrank == serverRank) {
-        mtxTest = newMatrix(n, p);
+	    matrix * mtxTest = newMatrix(n, p);
         matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
         // Test Correctness
         if(subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Cache Obliv incorrect \n");
         }
+		deleteMatrix(mtxTest);
         
     }
     
