@@ -48,8 +48,20 @@ int main(int argc, const char * argv[]) {
         return -2;
     }
     
+    // The goal here is to split matrix A horizontally by the number of processes that are running
+    // The sent A will be split evenly with the last process getting a slightly smaller load
+    // B will be broadcasted
+    // C will be built locally
     int rem = m % nprocs;
     int scatterSize = m/nprocs;
+    
+    // Problems:  1 - Server Process is not getting a dedicated part of matrix A
+    //            Soulution 1: make two aditional matrixes in the server process for A and C to pass into the matrix multiplicatoin
+    //            Soulution 2: (Implemented) reset the rows in A and C after the Scatter and Before the broadcast, so the matrix multiplication only works where it supposed to and reset A and C to there intial values before the Gather
+    //           2 - I am sometimes using scatterSize -1 and I am not sure if I have to do that or not
+                    // I originally thought that I did because data starts at 0 and m/amount of cores does not so I think I do
+    //          3 - Figure out Timing problem, may use gprof equivlent for timing
+    
     
     //Server Process
     if (myrank == serverRank) {
@@ -79,6 +91,10 @@ int main(int argc, const char * argv[]) {
                      MPI_COMM_WORLD)
         }
         
+        // Reset mtxA and mtxC
+        mtxA -> rows = scatterSize -1;
+        mtxC -> rows = scatterSize -1;
+        
     } else {
         // All other Processes not the Server Process will Recive the buffer
         matrix * mtxB = newMatrix(m, p);
@@ -88,8 +104,8 @@ int main(int argc, const char * argv[]) {
             matrix * mtxC = newmatrix(scatterSize - rem -1, p);
             
         } else {
-            matrix * mtxA = newmatrix(scatterSize -1, p);
-            matrix * mtxC = newmatrix(scatterSize -1, p);
+            matrix * mtxA = newmatrix(scatterSize, p);
+            matrix * mtxC = newmatrix(scatterSize, p);
             
         }
         
@@ -104,6 +120,11 @@ int main(int argc, const char * argv[]) {
     // Perform Matrix Multplicaiton
     int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
     printf("Error Code: %d, From Process %d", err, myrank);
+    
+    if (myrank == 0) {
+        mtxA -> rows = m;
+        mtxC -> rows = m;
+    }
     
     // Send Matrix C back to Server Process
     if (myrank == nprocs -1 ) {
