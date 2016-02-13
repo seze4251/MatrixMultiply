@@ -18,10 +18,10 @@
 int main(int argc, const char * argv[]) {
     
     //Initialize Base Vars
-    int nprocs, myrank;
-	int tag = 0;  // What is the purpose of this, is this a message identifier that I should do something with?
-	const int serverRank = 0;
+    int nprocs, myrank, tagA = 1, tagC = 2;
+    const int serverRank = 0;
     MPI_Status status;
+    matrix * mtxA, * mtxB = newMatrix(m, p), * mtxC;
     
     // Initialize MPI
     MPI_Init(&argc, &argv);
@@ -49,103 +49,89 @@ int main(int argc, const char * argv[]) {
     // The sent A will be split evenly with the last process getting a slightly smaller load
     // B will be broadcasted
     // C will be built locally
-    int rem = m % nprocs;
-    int scatterSize = m/nprocs;
     
-    // Problems:  1 - Server Process is not getting a dedicated part of matrix A
-    //            Soulution 1: make two aditional matrixes in the server process for A and C to pass into the matrix multiplicatoin
-    //            Soulution 2: (Implemented) reset the rows in A and C after the Scatter and Before the broadcast, so the matrix multiplication only works where it supposed to and reset A and C to there intial values before the Gather
-    //           2 - I am sometimes using scatterSize -1 and I am not sure if I have to do that or not
-                    // I originally thought that I did because data starts at 0 and m/amount of cores does not so I think I do
-    //          3 - Figure out Timing problem, may use gprof equivlent for timing
+    int rem = n % nprocs;
+    int scatterSize = n / nprocs;
     
+    // Set up server Ranks Vars
     
-    //Server Process
     if (myrank == serverRank) {
-        
-        // Declare and Randomize
-        matrix * mtxA = newMatrix(n, m);
-        matrix * mtxB = newMatrix(m, p);
-        matrix * mtxC = newmatrix(n, p);
+        mtxA = newMatrix(n, m);
+        mtxC = newmatrix(n, p);
         randomizeMatrix(mtxA);
         randomizeMatrix(mtxB);
-        // Take Server Process cut
+    }
+    
+    // Everyone Calls Broadcast
+    MPI_Bcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD);
+    
+    
+    //Server Process uses a blocking Send to distribute matrix <- Improvement to use non-blocking but complicates
+    if (myrank == serverRank) {
+        int i, int length = scatterSize;
         
-        // Broadcast 3 Matrixes to all processes
-        MPI_Bcast(mtxB -> data[0], m*p -1, MPI_DOUBLE, serverRank, MPI_COMM_WORLD);
-        
-        if (rem == 0) {
-            // Scatter A
-            int scatterSize = m/nprocs;
-// To Few Arguments Here
-MPI_Scatter(mtxA -> data[scatterSize -1], scatterSize -1, MPI_DOUBLE, mtxA -> data[0], m/nprocs -1, serverRank, MPI_COMM_WORLD);
-        } else {
-            // Scatter A without Seg Fault
-            int i;
-            for (i = 1; i < nprocs - 1; i++) {
-            // To Few Arguments Here Aswell
-			MPI_Scatter(mtxA -> data[scatterSize -1], scatterSize -1, MPI_DOUBLE, mtxA -> data[0], m/nprocs -1, serverRank, MPI_COMM_WORLD);
+        for (i = 1; i < nprocs; i++) {
+            if (i == nprocs - 1) {
+                length = scatterSize + rem
             }
-            MPI_Send(mtxA -> data[ scatterSize * (nprocs -1)], scatterSize - rem -1, MPI_DOUBLE, nprocs -1, tag,
-                     MPI_COMM_WORLD);
+            
+            MPI_Send(mtxA -> data[ scatterSize + scatterSize * (i -1)], length, MPI_DOUBLE, i, tagA,
+                     MPI_COMM_WORLD)
         }
         
         // Reset mtxA and mtxC
-        mtxA -> rows = scatterSize -1;
-        mtxC -> rows = scatterSize -1;
+        mtxA -> rows = scatterSize;
+        mtxC -> rows = scatterSize;
         
     } else {
         // All other Processes not the Server Process will Recive the buffer
-        matrix * mtxB = newMatrix(m, p);
         
         if (myrank == nprocs -1 ) {
-            matrix * mtxA = newMatrix(scatterSize - rem -1, m);
-            matrix * mtxC = newmatrix(scatterSize - rem -1, p);
+            mtxA = newMatrix(scatterSize + rem, m);
+            mtxC = newmatrix(scatterSize + rem, p);
+            MPI_Recv(mtxA -> data[0], scatterSize + rem, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, status);
             
         } else {
-            matrix * mtxA = newmatrix(scatterSize, p);
-            matrix * mtxC = newmatrix(scatterSize, p);
-            
+            mtxA = newmatrix(scatterSize, p);
+            mtxC = newmatrix(scatterSize, p);
+            MPI_Recv(mtxA -> data[0], scatterSize, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, status);
         }
-        
-		// Not confident in these commands
-        MPI_Recv(mtxC,serverRank, tag, MPI_COMM_WORLD, status);
-        
-        MPI_Recv(* mtxB, sizeof(* mtxB), MPI_Matrix,
-                 serverRank, tag, MPI_COMM_WORLD, status);
-        
     }
     
     // Perform Matrix Multplicaiton
     int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
     printf("Error Code: %d, From Process %d", err, myrank);
     
-    if (myrank == 0) {
-        mtxA -> rows = m;
-        mtxC -> rows = m;
-    }
-    
-    // Send Matrix C back to Server Process
-    if (myrank == nprocs -1 ) {
-        // Send Back Indivdiual Case
+    if (myrank == serverRank) {
+        mtxA -> rows = n;
+        mtxC -> rows = n;
+        length = scatterSize;
+        for (i = 1; i < nprocs; i++) {
+            if (i == nprocs -1) {
+                length = scattersize + rem;
+            }
+            MPI_Recv(mtxC -> data [scatterSize + scatterSize * (i-1)], length, MPI_DOUBLE, i, tagC, MPI_COMM_WORLD, status);
+        }
         
     } else {
-        // Send Back All other cases
-        MPI_Gather( mtxC -> data[0], (mtxC -> rows * mtxC -> cols) -1, MPI_DOUBLE, mtxC -> data [0], (mtxC -> rows * mtxC -> cols ) -1, MPI_DOUBLE, serverRank, MPI_COMM_WORLD);
-        
+        if (myrank == nprocs -1) {
+            MPI_Send(mtxC -> data[0], scatterSize + rem, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD);
+        } else {
+            MPI_Send(mtxC -> data[0], scatterSize, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD);
+        }
     }
     
     MPI_Barrier;
-	// Why would mtxA and mtxB be undeclared if I used them earlier ??    
+    
+    
     if (myrank == serverRank) {
-	    matrix * mtxTest = newMatrix(n, p);
+        matrix * mtxTest = newMatrix(n, p);
         matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
         // Test Correctness
         if(subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Cache Obliv incorrect \n");
         }
-		deleteMatrix(mtxTest);
-        
+        deleteMatrix(mtxTest);
     }
     
     deleteMatrix(mtxA);
