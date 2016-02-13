@@ -57,7 +57,7 @@ int main(int argc, const char * argv[]) {
     matrix * mtxB = newMatrix(m, p);
     if (myrank == serverRank) {
         mtxA = newMatrix(n, m);
-        mtxC = newmatrix(n, p);
+        mtxC = newMatrix(n, p);
         randomizeMatrix(mtxA);
         randomizeMatrix(mtxB);
     }
@@ -88,12 +88,12 @@ int main(int argc, const char * argv[]) {
         
         if (myrank == nprocs -1 ) {
             mtxA = newMatrix(scatterSize + rem, m);
-            mtxC = newmatrix(scatterSize + rem, p);
+            mtxC = newMatrix(scatterSize + rem, p);
             MPI_Recv(mtxA -> data[0], scatterSize + rem, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, &status);
             
         } else {
-            mtxA = newmatrix(scatterSize, p);
-            mtxC = newmatrix(scatterSize, p);
+            mtxA = newMatrix(scatterSize, p);
+            mtxC = newMatrix(scatterSize, p);
             MPI_Recv(mtxA -> data[0], scatterSize, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, &status);
         }
     }
