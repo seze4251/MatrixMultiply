@@ -56,7 +56,9 @@ void randomizeMatrix(const matrix * mtx) {
 
 void constMatrix(const matrix * mtx, const double value) {
     int i, j;
-    
+	if( !mtx) {
+	printf("ConstantMatrix: mtx points to NULL");
+	}
     for ( i = 0; i < mtx -> rows; i++) {
         for ( j = 0; j < mtx -> cols; j++) {
             ELEM(mtx,i,j) = value;
@@ -89,6 +91,9 @@ void deleteMatrix(matrix * mtx) {
 // Prints the matrix
 void printMatrix(const matrix * mtx) {
     printf("\n");
+	if (!mtx) {
+	printf("printMatrix: mtx points to null");
+	}
     int i, j;
     for ( i = 0; i < mtx -> rows; i++) {
         for ( j = 0; j < mtx -> cols ; j++) {
@@ -113,15 +118,19 @@ matrix * copyMatrix(const matrix * mtx) {
 // Subtract a Matrix
 int subtractMatrix(const matrix * mtx1, const matrix * mtx2) {
     int i, j;
-    
+    if (!mtx1 || !mtx2) {
+		printf("subtractMatrix: mtx1 or mtx2 point to null\n");
+		}
+
     if ( mtx1 -> cols != mtx2 -> cols || mtx1 -> rows != mtx2 -> rows ) {
-        printf("Mtx1 and Mtx2 must be the same size");
+        printf("Mtx1 and Mtx2 must be the same size\n");
+		return -2;
     }
     
     for ( i = 0; i < mtx1 -> rows; i++) {
         for ( j = 0; j < mtx2 -> cols; j++) {
             if (ELEM(mtx1,i,j) - ELEM(mtx2,i,j) != 0) {
-                return -1;
+                return -3;
             }
         }
     }
@@ -356,13 +365,13 @@ int matrixProductCacheObliv(const matrix * mtxA, const matrix * mtxB, matrix * m
     
     // If mtxA and mtxB are not the correct size, return -2
     if (mtxA -> cols != mtxB -> rows) {
-        printf("Matrix A cols must equal Matrix B rows");
+        printf("Matrix A cols must equal Matrix B rows\n");
         return -2;
     }
     
     // If mtxC is not the correct size, return -3
     if (mtxC -> rows != mtxA -> rows || mtxC -> cols != mtxB -> cols ) {
-        printf("Matrix C must be the correct size");
+        printf("Matrix C must be the correct size\n");
         return -3;
     }
     
@@ -551,55 +560,20 @@ int matrixProductCacheOblivOpenMp(const matrix * mtxA, const matrix * mtxB, matr
     
     // If mtxA and mtxB are not the correct size, return -2
     if (mtxA -> cols != mtxB -> rows) {
-        printf("Matrix A cols must equal Matrix B rows");
+        printf("Matrix A cols must equal Matrix B rows \n");
         return -2;
     }
     
     // If mtxC is not the correct size, return -3
     if (mtxC -> rows != mtxA -> rows || mtxC -> cols != mtxB -> cols ) {
-        printf("Matrix C must be the correct size");
+        printf("Matrix C must be the correct size \n");
         return -3;
     }
     
     if ( ((endRA - startRA) < maxDim) && ((endM - startM) < maxDim) && ((endCB -startCB) < maxDim) ) {
-        int i, j, k;
-        
+        int i,  
         // Perform the matrix multiplication
         for (i = startRA; i < endRA; i++) {
             for ( k = startM; k < endM ; k++) {
                 for ( j = startCB; j < endCB ; j++) {
-                    ELEM(mtxC,i,j) +=  ELEM(mtxA,i,k) * ELEM(mtxB,k,j);
-                }
-            }
-        }
-        
-        return 0;
-        
-    } else {
-        
-        if ( max( (endRA - startRA), (endM - startM), (endCB -startCB) ) ==  (endRA - startRA)) {
-            // Split A horizonally
-            
-            int c = startRA + (endRA - startRA) /2; // integers automatically floor in C
-            matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, c, startM, endM, startCB, endCB);
-            matrixProductCacheObliv(mtxA, mtxB, mtxC, c, endRA, startM, endM, startCB, endCB);
-            return 0;
-            
-        } else if (max( (endRA - startRA), (endM - startM), (endCB -startCB) ) ==  (endCB -startCB)) {
-            // Split B Vertically
-            
-            int c = startCB + (endCB -startCB) /2;
-            matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, startM, endM, startCB, c);
-            matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, startM, endM, c, endCB);
-            return 0;
-            
-        } else {
-            
-            // Split the Columns in A and the Rows in B
-            int c = startM + (endM - startM) /2;
-            matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, startM, c, startCB, endCB);
-            matrixProductCacheObliv(mtxA, mtxB, mtxC, startRA, endRA, c, endM, startCB, endCB);
-            return 0;
-        }
-    }
-}
+       

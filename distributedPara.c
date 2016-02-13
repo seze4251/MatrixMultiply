@@ -15,7 +15,7 @@
 
 // Requires command line input of m, n, and p
 // Assume Square Matrix Divisible by 4, n = m = p and divisible by 4
-int main(int argc, const char * argv[]) {
+int main(int argc, char * argv[]) {
     
     //Initialize Base Vars
     int nprocs, myrank, tagA = 1, tagC = 2;
@@ -52,14 +52,17 @@ int main(int argc, const char * argv[]) {
     
     int rem = n % nprocs;
     int scatterSize = n / nprocs;
-
+	clock_t start_t, end_t, total_t;
     // Set up server Ranks Vars
     matrix * mtxB = newMatrix(m, p);
     if (myrank == serverRank) {
         mtxA = newMatrix(n, m);
         mtxC = newMatrix(n, p);
-        randomizeMatrix(mtxA);
-        randomizeMatrix(mtxB);
+//        randomizeMatrix(mtxA);
+//        randomizeMatrix(mtxB);
+		constMatrix(mtxA,3);
+		constMatrix(mtxB,4);
+		start_t = clock();
     }
     
     // Everyone Calls Broadcast
@@ -100,9 +103,9 @@ int main(int argc, const char * argv[]) {
     
     // Perform Matrix Multplicaiton
     int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
-    printf("Error Code: %d, From Process %d", err, myrank);
-    
-    if (myrank == serverRank) {
+	printf("Process Number:%d  Error Code: %d\n", myrank, err);    
+
+	if (myrank == serverRank) {
         mtxA -> rows = n;
         mtxC -> rows = n;
         int i, length;
@@ -123,12 +126,25 @@ int main(int argc, const char * argv[]) {
     }
     
     MPI_Barrier;
-    
-    
+        
     if (myrank == serverRank) {
+		// End Clock
+		end_t = clock();
+		printf("Start Clock: %lu End Clock: %lu\n ",start_t, end_t);
+		total_t = (double)(end_t - start_t)/CLOCKS_PER_SEC;
+		printf("Total Time: %lu \n", total_t);
+		// Print to File
+		FILE * file = fopen("OutputParallel","a");
+		fprintf(file, " %d \t\t %lu /n",m,total_t);
+		fclose(file);
+
         matrix * mtxTest = newMatrix(n, p);
         matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
         // Test Correctness
+		printf("Matrix Test: \n");
+		printMatrix(mtxTest);
+		printf("Matrix C: \n");
+		printMatrix(mtxC);
         if(subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Cache Obliv incorrect \n");
         }
