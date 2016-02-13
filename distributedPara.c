@@ -21,7 +21,7 @@ int main(int argc, const char * argv[]) {
     int nprocs, myrank, tagA = 1, tagC = 2;
     const int serverRank = 0;
     MPI_Status status;
-    matrix * mtxA, * mtxB = newMatrix(m, p), * mtxC;
+    matrix * mtxA, * mtxC;
     
     // Initialize MPI
     MPI_Init(&argc, &argv);
@@ -52,9 +52,9 @@ int main(int argc, const char * argv[]) {
     
     int rem = n % nprocs;
     int scatterSize = n / nprocs;
-    
+
     // Set up server Ranks Vars
-    
+    matrix * mtxB = newMatrix(m, p);
     if (myrank == serverRank) {
         mtxA = newMatrix(n, m);
         mtxC = newmatrix(n, p);
@@ -68,15 +68,15 @@ int main(int argc, const char * argv[]) {
     
     //Server Process uses a blocking Send to distribute matrix <- Improvement to use non-blocking but complicates
     if (myrank == serverRank) {
-        int i, int length = scatterSize;
+        int i, length = scatterSize;
         
         for (i = 1; i < nprocs; i++) {
             if (i == nprocs - 1) {
-                length = scatterSize + rem
+                length = scatterSize + rem;
             }
             
             MPI_Send(mtxA -> data[ scatterSize + scatterSize * (i -1)], length, MPI_DOUBLE, i, tagA,
-                     MPI_COMM_WORLD)
+                     MPI_COMM_WORLD);
         }
         
         // Reset mtxA and mtxC
@@ -89,12 +89,12 @@ int main(int argc, const char * argv[]) {
         if (myrank == nprocs -1 ) {
             mtxA = newMatrix(scatterSize + rem, m);
             mtxC = newmatrix(scatterSize + rem, p);
-            MPI_Recv(mtxA -> data[0], scatterSize + rem, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, status);
+            MPI_Recv(mtxA -> data[0], scatterSize + rem, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, &status);
             
         } else {
             mtxA = newmatrix(scatterSize, p);
             mtxC = newmatrix(scatterSize, p);
-            MPI_Recv(mtxA -> data[0], scatterSize, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, status);
+            MPI_Recv(mtxA -> data[0], scatterSize, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, &status);
         }
     }
     
@@ -105,12 +105,13 @@ int main(int argc, const char * argv[]) {
     if (myrank == serverRank) {
         mtxA -> rows = n;
         mtxC -> rows = n;
-        length = scatterSize;
+        int i, length;
+		length = scatterSize;
         for (i = 1; i < nprocs; i++) {
             if (i == nprocs -1) {
-                length = scattersize + rem;
+                length = scatterSize + rem;
             }
-            MPI_Recv(mtxC -> data [scatterSize + scatterSize * (i-1)], length, MPI_DOUBLE, i, tagC, MPI_COMM_WORLD, status);
+            MPI_Recv(mtxC -> data [scatterSize + scatterSize * (i-1)], length, MPI_DOUBLE, i, tagC, MPI_COMM_WORLD, &status);
         }
         
     } else {

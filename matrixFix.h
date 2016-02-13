@@ -32,8 +32,4 @@ int matrixProductFix3(const matrix * mtxA, const matrix * mtxB, matrix * mtxC);
 int max( int a, int b, int c);
 int matrixProductCacheObliv(const matrix * mtxA, const matrix * mtxB, matrix * mtxC, int startRA, int endRA, int startM, int endM, int startCB, int endCB);
 void zeroMatrix(const matrix * mtx);
-int matrixProductCacheOblivOpenMp(const matrix * mtxA, const matrix * mtxB, matrix * mtxC, int startRA, int endRA, int startM, int endM, int startCB, int endCB);
-int matrixProductCacheOblivNonBlocking(const matrix * mtxA, const matrix * mtxB, matrix * mtxC, int startRA, int endRA, int startM, int endM, int startCB, int endCB);
-int matrixProductCacheOblivBlocking(const matrix * mtxA, const matrix * mtxB, matrix * mtxC, int startRA, int endRA, int startM, int endM, int startCB, int endCB);
-
 #endif /* matrixFix_h */
