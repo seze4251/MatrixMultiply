@@ -49,10 +49,11 @@ int main(int argc, char * argv[]) {
     // The sent A will be split evenly with the last process getting a slightly smaller load
     // B will be broadcasted
     // C will be built locally
-    
+//	printf("nprocs = %d \n",nprocs);    
     int rem = n % nprocs;
     int scatterSize = n / nprocs;
-	clock_t start_t, end_t, total_t;
+	int i, length;
+
     // Set up server Ranks Vars
     matrix * mtxB = newMatrix(m, p);
     if (myrank == serverRank) {
@@ -62,23 +63,24 @@ int main(int argc, char * argv[]) {
 //        randomizeMatrix(mtxB);
 		constMatrix(mtxA,3);
 		constMatrix(mtxB,4);
-		start_t = clock();
+	//	printf("Server Process mtxA\n");
+	//	printMatrix(mtxA);
+	//	printf("\n\n");
     }
-    
+	clock_t start_t = clock();    
     // Everyone Calls Broadcast
     MPI_Bcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD);
-    
-    
+
     //Server Process uses a blocking Send to distribute matrix <- Improvement to use non-blocking but complicates
     if (myrank == serverRank) {
-        int i, length = scatterSize;
-        
+     // Length describes how many rows are being sent
+        length = scatterSize;
         for (i = 1; i < nprocs; i++) {
             if (i == nprocs - 1) {
                 length = scatterSize + rem;
             }
             
-            MPI_Send(mtxA -> data[ scatterSize + scatterSize * (i -1)], length, MPI_DOUBLE, i, tagA,
+            MPI_Send(mtxA -> data[ scatterSize + scatterSize * (i -1)], length*m, MPI_DOUBLE, i, tagA,
                      MPI_COMM_WORLD);
         }
         
@@ -92,15 +94,22 @@ int main(int argc, char * argv[]) {
         if (myrank == nprocs -1 ) {
             mtxA = newMatrix(scatterSize + rem, m);
             mtxC = newMatrix(scatterSize + rem, p);
-            MPI_Recv(mtxA -> data[0], scatterSize + rem, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, &status);
+            MPI_Recv(mtxA -> data[0], (scatterSize + rem)*m, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, &status);
             
         } else {
-            mtxA = newMatrix(scatterSize, p);
+            mtxA = newMatrix(scatterSize, m);
             mtxC = newMatrix(scatterSize, p);
-            MPI_Recv(mtxA -> data[0], scatterSize, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, &status);
+            MPI_Recv(mtxA -> data[0], scatterSize*m, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, &status);
         }
     }
-    
+	
+/*	if (myrank == 1) {
+	printf("mtxA \n");
+	printMatrix(mtxA);
+	printf("\n mtxB\n");
+	printMatrix(mtxB);
+	}
+*/
     // Perform Matrix Multplicaiton
     int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
 	printf("Process Number:%d  Error Code: %d\n", myrank, err);    
@@ -108,36 +117,45 @@ int main(int argc, char * argv[]) {
 	if (myrank == serverRank) {
         mtxA -> rows = n;
         mtxC -> rows = n;
-        int i, length;
+        printf("I made it this Far\n");
+
 		length = scatterSize;
-        for (i = 1; i < nprocs; i++) {
+		for (i = 1; i < nprocs; i++) {
             if (i == nprocs -1) {
                 length = scatterSize + rem;
+				printf("Do I make it here\n");
             }
-            MPI_Recv(mtxC -> data [scatterSize + scatterSize * (i-1)], length, MPI_DOUBLE, i, tagC, MPI_COMM_WORLD, &status);
-        }
-        
+			MPI_Status newS;
+			printf("I am sure this line is my error i = %d scattersize = %d length = %d  rem = %d\n",i,scatterSize,length,rem);
+           int mpiER =  MPI_Recv(mtxC -> data [scatterSize + scatterSize * (i-1)], length * m, MPI_DOUBLE, i, i+tagC, MPI_COMM_WORLD, &newS);
+        printf("WAHOOOOOO\n");
+		}
+        printf("Did I work?\n"); 
     } else {
         if (myrank == nprocs -1) {
-            MPI_Send(mtxC -> data[0], scatterSize + rem, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD);
+            MPI_Send(mtxC -> data[0], (scatterSize + rem) * m, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD);
+			printf("Sure did\n");
         } else {
-            MPI_Send(mtxC -> data[0], scatterSize, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD);
+        MPI_Send(mtxC -> data[0], scatterSize * m, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD);
+		printf("Sure Can!\n");
         }
+
     }
     
-    MPI_Barrier;
-        
+    MPI_Barrier(MPI_COMM_WORLD);
+        printf("made it here222222 Process Number: %d\n", myrank);
     if (myrank == serverRank) {
 		// End Clock
-		end_t = clock();
-		printf("Start Clock: %lu End Clock: %lu\n ",start_t, end_t);
-		total_t = (double)(end_t - start_t)/CLOCKS_PER_SEC;
+//		printf("Start Clock: %lu\n",start_t);
+/*		clock_t end_t = clock();
+		printf("End Clock: %lu\n " ,end_t);
+		clock_t total_t = (double) (end_t - start_t) / CLOCKS_PER_SEC;
 		printf("Total Time: %lu \n", total_t);
 		// Print to File
-		FILE * file = fopen("OutputParallel","a");
-		fprintf(file, " %d \t\t %lu /n",m,total_t);
-		fclose(file);
-
+//		FILE * file = fopen("OutputParallel","a");
+//		fprintf(file, " %d \t\t %lu /n",m,total_t);
+//		fclose(file);
+*/
         matrix * mtxTest = newMatrix(n, p);
         matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
         // Test Correctness
@@ -154,7 +172,8 @@ int main(int argc, char * argv[]) {
     deleteMatrix(mtxA);
     deleteMatrix(mtxB);
     deleteMatrix(mtxC);
-    return 0;
+	MPI_Finalize();
+	return 0;
 }
 
 
