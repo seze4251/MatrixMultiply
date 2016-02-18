@@ -122,16 +122,16 @@ int main(int argc, char * argv[]) {
             }
             MPI_Status newS;
             printf("I am sure this line is my error i = %d scattersize = %d length = %d  rem = %d\n",i,scatterSize,length,rem);
-            int mpiER =  MPI_Recv(mtxC -> data [scatterSize + scatterSize * (i-1)], length * m, MPI_DOUBLE, i, i+tagC, MPI_COMM_WORLD, &newS);
+            int mpiER =  MPI_Recv(mtxC -> data [scatterSize + scatterSize * (i-1)], length * p, MPI_DOUBLE, i, i+tagC, MPI_COMM_WORLD, &newS);
             printf("WAHOOOOOO\n");
         }
         printf("Did I work?\n");
     } else {
         if (myrank == nprocs -1) {
-            MPI_Send(mtxC -> data[0], (scatterSize + rem) * m, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD);
+            MPI_Send(mtxC -> data[0], (scatterSize + rem) * p, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD);
             printf("Sure did\n");
         } else {
-            MPI_Send(mtxC -> data[0], scatterSize * m, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD);
+            MPI_Send(mtxC -> data[0], scatterSize * p, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD);
             printf("Sure Can!\n");
         }
         
