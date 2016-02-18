@@ -2,17 +2,17 @@
 
 .PHONY: clean
 CC = mpicc
-OBJS = distributedPara.o matrixFix.o
+OBJS = distParaAsync.o matrixFix.o
 
-paraRun: $(OBJS)
+paraAsyn: $(OBJS)
 	$(CC) -o $@ $^
 
 $(OBJS): %.o: %.c
 	$(CC) -c $<
 
-distributedPara.o: matrixFix.h
+distParaAsync.o: matrixFix.h
 
 matrixFix.o: matrixFix.h
 
 clean: 
-	rm -rf *.o paraRun
+	rm -rf *.o paraAsyn

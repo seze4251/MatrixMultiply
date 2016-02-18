@@ -26,7 +26,7 @@ int main(int argc, char * argv[]) {
     const int serverRank = 0;
     MPI_Status status;
     matrix * mtxA, * mtxC;
-    int m, n, p, err = 0;
+    int m, n, p, inCheck = 0;
     
     // Determine # of procs and my rank
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -34,28 +34,25 @@ int main(int argc, char * argv[]) {
     
 
     // Make sure Command Line Input is acceptable
-    
+    if (myrank == 0) {
     while (1) {
-    
-        if (myrank == 0) {
-            printf("Please enter a 3 integers for the rows of A (n) columns of A (m) and cols of B (p) followed by\n");
-            err = scanf("%d %d %d", &n, &m, &p)
-        }
-        
-        if (err = EOF) {
-            if (n < 1 || m < 1 || p < 1) {
+            printf("Please enter a 3 integers for the rows of A (n) columns of A (m) and cols of B (p)\n");
+            inCheck = scanf("%d %d %d", &n, &m, &p);
+
+			printf(" n = %d, m = %d p = %d, incheck = %d",n,m,p, inCheck);
+			if (inCheck == 3) {
+         	printf("made it here");
+		 	if (n > 1 && m > 1 && p > 1) {
                 break;
             } else {
-                printf("Please re enter 3 integers with spaces and than press ctr D\n");
+                printf("Please re enter 3 integers with spaces and then press enter\n");
             }
         }
+		}
         
     }
-    
 
-    
-
-    
+	MPI_Barrier(MPI_COMM_WORLD);
     int rem = n % nprocs;
     int scatterSize = n / nprocs;
     int i, length;
