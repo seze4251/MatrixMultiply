@@ -31,18 +31,14 @@ int main(int argc, char * argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     
     // Make sure Command Line Input is acceptable
-    if (argc != 4) {
-        printf("Please enter 3 integers on the command line for n, m, and p where A[n,m] and B is [m,p] \n");
-        return -1;
-    }
-    
-    int n = atoi(argv[1]);
-    int m = atoi(argv[2]);
-    int p = atoi(argv[3]);
-    
-    if (n < 1 || m < 1 || p < 1) {
-        printf("n, m, and p must be greater or equal to 1");
-        return -2;
+    int n, m, p;
+    while (1) {
+        int check = scanf("%d %d %d",&n, &m, &p);
+        if (n > 0 && m > 0 && p > 0) {
+            break;
+        } else {
+            printf("Please Enter Three Numbers that Are greater than 0 \n");
+        }
     }
     
     int rem = n % nprocs;
@@ -54,10 +50,10 @@ int main(int argc, char * argv[]) {
     if (myrank == serverRank) {
         mtxA = newMatrix(n, m);
         mtxC = newMatrix(n, p);
-        //        randomizeMatrix(mtxA);
-        //        randomizeMatrix(mtxB);
-        constMatrix(mtxA,3);
-        constMatrix(mtxB,4);
+        randomizeMatrix(mtxA);
+        randomizeMatrix(mtxB);
+        //       constMatrix(mtxA,3);
+        //     constMatrix(mtxB,4);
         //	printf("Server Process mtxA\n");
         //	printMatrix(mtxA);
         //	printf("\n\n");
