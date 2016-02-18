@@ -22,7 +22,6 @@ int main(int argc, char * argv[]) {
     const int serverRank = 0;
     MPI_Status status;
     matrix * mtxA, * mtxC;
-    int m, n, p;
     
     // Initialize MPI
     MPI_Init(&argc, &argv);
@@ -31,17 +30,19 @@ int main(int argc, char * argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     
-    if (myrank == serverRank) {
-        while (1) {
-            printf("Put 3 integers in and press enter\n");
-            scanf("%d %d %d", &n, &m, &p);
-            if (n > 0 && m > 0 && p > 0) {
-                printf("Inputed: %d, %d, %d \n",n,m,p);
-                break;
-            } else {
-                printf("Enter Three Integers \n");
-            }
-        }
+    // Make sure Command Line Input is acceptable
+    if (argc != 4) {
+        printf("Please enter 3 integers on the command line for n, m, and p where A[n,m] and B is [m,p] \n");
+        return -1;
+    }
+    
+    int n = atoi(argv[1]);
+    int m = atoi(argv[2]);
+    int p = atoi(argv[3]);
+    
+    if (n < 1 || m < 1 || p < 1) {
+        printf("n, m, and p must be greater or equal to 1");
+        return -2;
     }
     
     int rem = n % nprocs;
