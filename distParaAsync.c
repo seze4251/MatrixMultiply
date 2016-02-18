@@ -31,16 +31,23 @@ int main(int argc, char * argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     
     // Make sure Command Line Input is acceptable
-    int n, m, p;
-    while (1) {
-        int check = scanf("%d %d %d",&n, &m, &p);
+    int buff[3], n, m, p;
+
+	if (myrank == serverRank) {
+	while (1) {
+        printf("Please enter 3 ints to dimensionlize the Matrix\n");
+		int check = scanf("%d %d %d",&n, &m, &p);
         if (n > 0 && m > 0 && p > 0) {
             break;
         } else {
             printf("Please Enter Three Numbers that Are greater than 0 \n");
         }
     }
-    
+	buff[0] = n; buff[1] = m; buff[2] = p;
+	}
+
+	MPI_Bcast(buff, 3, MPI_INT, serverRank, MPI_COMM_WORLD);
+    n = buff[0]; m = buff[1]; p = buff[2];
     int rem = n % nprocs;
     int scatterSize = n / nprocs;
     int i, length;
