@@ -1,0 +1,18 @@
+# Makefile for Matrix Multiplication
+
+.PHONY: clean
+CC = mpicc
+OBJS = distributedPara.o matrixFix.o
+
+paraRun: $(OBJS)
+	$(CC) -o $@ $^
+
+$(OBJS): %.o: %.c
+	$(CC) -c $<
+
+distributedPara.o: matrixFix.h
+
+matrixFix.o: matrixFix.h
+
+clean: 
+	rm -rf *.o paraRun
