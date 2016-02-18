@@ -16,43 +16,34 @@
 // Requires command line input of m, n, and p
 // Assume Square Matrix Divisible by 4, n = m = p and divisible by 4
 int main(int argc, char * argv[]) {
-
-    // Initialize MPI
-    MPI_Init(&argc, &argv);
-    
     
     //Initialize Base Vars
     int nprocs, myrank, tagA = 1, tagC = 2;
     const int serverRank = 0;
     MPI_Status status;
     matrix * mtxA, * mtxC;
-    int m, n, p, inCheck = 0;
+    int m, n, p;
+    
+    // Initialize MPI
+    MPI_Init(&argc, &argv);
     
     // Determine # of procs and my rank
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     
-
-    // Make sure Command Line Input is acceptable
-    if (myrank == 0) {
-    while (1) {
-            printf("Please enter a 3 integers for the rows of A (n) columns of A (m) and cols of B (p)\n");
-            inCheck = scanf("%d %d %d", &n, &m, &p);
-
-			printf(" n = %d, m = %d p = %d, incheck = %d",n,m,p, inCheck);
-			if (inCheck == 3) {
-         	printf("made it here");
-		 	if (n > 1 && m > 1 && p > 1) {
+    if (myrank == serverRank) {
+        while (1) {
+            printf("Put 3 integers in and press enter\n");
+            scanf("%d %d %d", &n, &m, &p);
+            if (n > 0 && m > 0 && p > 0) {
+                printf("Inputed: %d, %d, %d \n",n,m,p);
                 break;
             } else {
-                printf("Please re enter 3 integers with spaces and then press enter\n");
+                printf("Enter Three Integers \n");
             }
         }
-		}
-        
     }
-
-	MPI_Barrier(MPI_COMM_WORLD);
+    
     int rem = n % nprocs;
     int scatterSize = n / nprocs;
     int i, length;
