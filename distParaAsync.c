@@ -16,153 +16,161 @@
 // Requires command line input of m, n, and p
 // Assume Square Matrix Divisible by 4, n = m = p and divisible by 4
 int main(int argc, char * argv[]) {
+    // Initialize MPI
+    MPI_Init(&argc, &argv);
     
-    //Initialize Base Vars
-    int nprocs, myrank, tagA = 1, tagC = 2;
+    //Initialize Base Vars on all processes
+    int nprocs, myrank, tagA = 1, tagC = 2, mpi_error;
     const int serverRank = 0;
     MPI_Status status;
     matrix * mtxA, * mtxC;
-    
-    // Initialize MPI
-    MPI_Init(&argc, &argv);
     
     // Determine # of procs and my rank
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     
-    // Make sure Command Line Input is acceptable
+    // Ancient Implementation - unpredictable on different machines
+    /*
+     if (argc != 4) {
+     printf("Please enter 3 integers on the command line for n, m, and p where A[n,m] and B is [m,p] \n");
+     return -1;
+     }
+     
+     int n = atoi(argv[1]);
+     int m = atoi(argv[2]);
+     int p = atoi(argv[3]);
+     
+     if (n < 1 || m < 1 || p < 1) {
+     printf("n, m, and p must be greater or equal to 1");
+     return -2;
+     }
+     */
+    
+    // Read in Data
     int buff[3], n, m, p;
-
-	if (myrank == serverRank) {
-	while (1) {
-        printf("Please enter 3 ints to dimensionlize the Matrix\n");
-		int check = scanf("%d %d %d",&n, &m, &p);
-        if (n > 0 && m > 0 && p > 0) {
-            break;
-        } else {
-            printf("Please Enter Three Numbers that Are greater than 0 \n");
+    
+    if (myrank == serverRank) {
+        while (1) {
+            printf("Please enter 3 ints to dimensionlize the Matrix\n");
+            int check = scanf("%d %d %d",&n, &m, &p);
+            if (n > 0 && m > 0 && p > 0) {
+                break;
+            } else {
+                printf("Please Enter Three Numbers that Are greater than 0 \n");
+            }
         }
+        buff[0] = n; buff[1] = m; buff[2] = p;
     }
-	buff[0] = n; buff[1] = m; buff[2] = p;
-	}
-
-	MPI_Bcast(buff, 3, MPI_INT, serverRank, MPI_COMM_WORLD);
+    mpi_error = MPI_Bcast(buff, 3, MPI_INT, serverRank, MPI_COMM_WORLD); // MPI Bcast blocks until Everyone is here
     n = buff[0]; m = buff[1]; p = buff[2];
+    
+    
+    // Determine necissary variables for splitting by # of processes
     int rem = n % nprocs;
     int scatterSize = n / nprocs;
-    int i, length;
+    int i, lengthmpi_error;
     
-    // Set up server Ranks Vars
+    // Everyone makes matrixes at the same time!
     matrix * mtxB = newMatrix(m, p);
+    
     if (myrank == serverRank) {
         mtxA = newMatrix(n, m);
         mtxC = newMatrix(n, p);
         randomizeMatrix(mtxA);
         randomizeMatrix(mtxB);
-        //       constMatrix(mtxA,3);
-        //     constMatrix(mtxB,4);
-        //	printf("Server Process mtxA\n");
-        //	printMatrix(mtxA);
-        //	printf("\n\n");
+        
+    } else if (myrank == nprocs -1 ) {
+        mtxA = newMatrix(scatterSize + rem, m);
+        mtxC = newMatrix(scatterSize + rem, p);
+        
+        
+    } else {
+        mtxA = newMatrix(scatterSize, m);
+        mtxC = newMatrix(scatterSize, p);
     }
-    clock_t start_t = clock();
     
-    MPI_Bcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD);
+    // Broadcast B
+    MPI_Request [numprocs] req;
+    mpi_error = MPI_Ibcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD, &req[0]);
     
-    //Server Process uses a blocking Send to distribute matrix <- Improvement to use non-blocking but complicates
+    // Server Rank Sends out A
     if (myrank == serverRank) {
-        // Length describes how many rows are being sent
+        // length - how many rows to send
         length = scatterSize;
+        MPI_Request req;
+        
         for (i = 1; i < nprocs; i++) {
             if (i == nprocs - 1) {
                 length = scatterSize + rem;
             }
-            
-            MPI_Send(mtxA -> data[ scatterSize + scatterSize * (i -1)], length*m, MPI_DOUBLE, i, tagA,
-                     MPI_COMM_WORLD);
+            mpi_error = MPI_Isend(mtxA -> data[ scatterSize + scatterSize * (i -1)], length*m, MPI_DOUBLE, i, tagA,
+                                  MPI_COMM_WORLD, &req[i]);
         }
         
-        // Reset mtxA and mtxC
+        // Set rows of A and C so that serverProcess does work!
         mtxA -> rows = scatterSize;
         mtxC -> rows = scatterSize;
         
     } else {
-        // All other Processes not the Server Process will Recive the buffer
-        
         if (myrank == nprocs -1 ) {
-            mtxA = newMatrix(scatterSize + rem, m);
-            mtxC = newMatrix(scatterSize + rem, p);
-            MPI_Recv(mtxA -> data[0], (scatterSize + rem)*m, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, &status);
-            
+            mpi_error = MPI_Irecv(mtxA -> data[0], (scatterSize + rem)*m, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, &req[myrank]);
         } else {
-            mtxA = newMatrix(scatterSize, m);
-            mtxC = newMatrix(scatterSize, p);
-            MPI_Recv(mtxA -> data[0], scatterSize*m, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, &status);
+            mpi_error = MPI_Irecv(mtxA -> data[0], scatterSize*m, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, &req[myrank]);
         }
     }
     
-    /*	if (myrank == 1) {
-     printf("mtxA \n");
-     printMatrix(mtxA);
-     printf("\n mtxB\n");
-     printMatrix(mtxB);
-     }
-     */
+    MPI_Waitall(req, 1 + numprocs, MPI_STATUSES_IGNORE);
+    
     // Perform Matrix Multplicaiton
     int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
-    printf("Process Number:%d  Error Code: %d\n", myrank, err);
+    //printf("Process Number:%d  Error Code: %d\n", myrank, err); //Debug
     
     if (myrank == serverRank) {
+        // Resize rows of A and C
         mtxA -> rows = n;
         mtxC -> rows = n;
-        printf("I made it this Far\n");
-        
         length = scatterSize;
+        
         for (i = 1; i < nprocs; i++) {
             if (i == nprocs -1) {
                 length = scatterSize + rem;
-                printf("Do I make it here\n");
             }
-            MPI_Status newS;
-            printf("I am sure this line is my error i = %d scattersize = %d length = %d  rem = %d\n",i,scatterSize,length,rem);
-            int mpiER =  MPI_Recv(mtxC -> data [scatterSize + scatterSize * (i-1)], length * p, MPI_DOUBLE, i, i+tagC, MPI_COMM_WORLD, &newS);
-            printf("WAHOOOOOO\n");
+            mpi_error =  MPI_Irecv(mtxC -> data [scatterSize + scatterSize * (i-1)], length * p, MPI_DOUBLE, i, i+tagC, MPI_COMM_WORLD, &newS);
         }
-        printf("Did I work?\n");
+        
     } else {
         if (myrank == nprocs -1) {
-            MPI_Send(mtxC -> data[0], (scatterSize + rem) * p, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD);
-            printf("Sure did\n");
+            MPI_Isend(mtxC -> data[0], (scatterSize + rem) * p, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD);
+            
         } else {
-            MPI_Send(mtxC -> data[0], scatterSize * p, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD);
-            printf("Sure Can!\n");
+            MPI_Isend(mtxC -> data[0], scatterSize * p, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD);
+            
         }
         
     }
     
+    
     MPI_Barrier(MPI_COMM_WORLD);
-    printf("made it here222222 Process Number: %d\n", myrank);
+    
     if (myrank == serverRank) {
-        // End Clock
-        printf("Start Clock: %lu\n",start_t);
-        clock_t end_t = clock();
-        printf("End Clock: %lu\n " ,end_t);
-        clock_t total_t = (double) (end_t - start_t) / CLOCKS_PER_SEC;
-        printf("Total Time: %lu \n", total_t);
+        
         // Print to File
-        FILE * file = fopen("OutputParallel","a");
-        fprintf(file, " %d \t\t %lu /n",m,total_t);
-        fclose(file);
+        /*FILE * file = fopen("OutputParallel","a");
+         fprintf(file, " %d \t\t %lu /n",m,total_t);
+         fclose(file);
+         */
         
         matrix * mtxTest = newMatrix(n, p);
         matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
-        // Test Correctness
+        
+        // Test Correctness  DEBUG
         /*
          printf("Matrix Test: \n");
          printMatrix(mtxTest);
          printf("Matrix C: \n");
          printMatrix(mtxC);
          */
+        
         if(subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Cache Obliv incorrect \n");
         }
