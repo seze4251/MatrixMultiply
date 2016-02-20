@@ -1,5 +1,5 @@
 //
-//  mainParallel
+//  distParaAsync.c
 //  MatrixFix
 //
 //  Created by Seth on 2/2/16.
@@ -13,8 +13,6 @@
 #include <mpi.h>
 
 
-// Requires command line input of m, n, and p
-// Assume Square Matrix Divisible by 4, n = m = p and divisible by 4
 int main(int argc, char * argv[]) {
     // Initialize MPI
     MPI_Init(&argc, &argv);
@@ -68,7 +66,7 @@ int main(int argc, char * argv[]) {
     // Determine necissary variables for splitting by # of processes
     int rem = n % nprocs;
     int scatterSize = n / nprocs;
-    int i, lengthmpi_error;
+    int i, length;
     
     // Everyone makes matrixes at the same time!
     matrix * mtxB = newMatrix(m, p);
@@ -90,21 +88,20 @@ int main(int argc, char * argv[]) {
     }
     
     // Broadcast B
-    MPI_Request [numprocs] req;
-    mpi_error = MPI_Ibcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD, &req[0]);
+    MPI_Request req [nprocs];
+    mpi_error = MPI_Ibcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD, req);
     
     // Server Rank Sends out A
     if (myrank == serverRank) {
         // length - how many rows to send
         length = scatterSize;
-        MPI_Request req;
         
         for (i = 1; i < nprocs; i++) {
             if (i == nprocs - 1) {
                 length = scatterSize + rem;
             }
-            mpi_error = MPI_Isend(mtxA -> data[ scatterSize + scatterSize * (i -1)], length*m, MPI_DOUBLE, i, tagA,
-                                  MPI_COMM_WORLD, &req[i]);
+            mpi_error = MPI_Isend(mtxA -> data[ scatterSize + scatterSize * (i -1)], length*m, MPI_DOUBLE, i, tagA, \
+                                  MPI_COMM_WORLD, (req+i));
         }
         
         // Set rows of A and C so that serverProcess does work!
@@ -113,19 +110,43 @@ int main(int argc, char * argv[]) {
         
     } else {
         if (myrank == nprocs -1 ) {
-            mpi_error = MPI_Irecv(mtxA -> data[0], (scatterSize + rem)*m, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, &req[myrank]);
-        } else {
-            mpi_error = MPI_Irecv(mtxA -> data[0], scatterSize*m, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, &req[myrank]);
+            mpi_error = MPI_Irecv(mtxA -> data[0], (scatterSize + rem)*m, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, \
+		req + myrank);
+        
+		} else {
+            mpi_error = MPI_Irecv(mtxA -> data[0], scatterSize*m, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, req + myrank);
         }
     }
     
-    MPI_Waitall(req, 1 + numprocs, MPI_STATUSES_IGNORE);
-    
+//    MPI_Waitall(nprocs, req, MPI_STATUS_IGNORE);
+ /* 		MPI_Wait(req, MPI_STATUS_IGNORE);
+  		printf("made it1 \n");
+
+         MPI_Wait(req +1, MPI_STATUS_IGNORE);
+        printf("made it2 \n");
+
+         MPI_Wait(req+2, MPI_STATUS_IGNORE);
+         printf("made it3 \n");
+ 
+          MPI_Wait(req +3, MPI_STATUS_IGNORE);
+        printf("made it4 \n");
+*/
+		if ( myrank != serverRank) {
+			MPI_Wait(req, MPI_STATUS_IGNORE);
+			MPI_Wait(req + myrank, MPI_STATUS_IGNORE);
+		}
+
+	printf("MADE IT HERE ON PROCESS: %d\n", myrank);			
     // Perform Matrix Multplicaiton
     int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
-    //printf("Process Number:%d  Error Code: %d\n", myrank, err); //Debug
+    printf("Process Number:%d  Error Code: %d\n", myrank, err); //Debug
     
     if (myrank == serverRank) {
+
+	for ( i = 1; i < nprocs; i++) {
+	printf("I work on server i = %d",i);
+		MPI_Request_free(req+i);
+	}
         // Resize rows of A and C
         mtxA -> rows = n;
         mtxC -> rows = n;
@@ -135,23 +156,38 @@ int main(int argc, char * argv[]) {
             if (i == nprocs -1) {
                 length = scatterSize + rem;
             }
-            mpi_error =  MPI_Irecv(mtxC -> data [scatterSize + scatterSize * (i-1)], length * p, MPI_DOUBLE, i, i+tagC, MPI_COMM_WORLD, &newS);
+            mpi_error =  MPI_Irecv(mtxC -> data [scatterSize + scatterSize * (i-1)], length * p, MPI_DOUBLE, i, i+tagC, \
+			MPI_COMM_WORLD, req + i);
         }
         
     } else {
-        if (myrank == nprocs -1) {
-            MPI_Isend(mtxC -> data[0], (scatterSize + rem) * p, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD);
+		//MPI_Request_free(req + myrank);
+		//printf("All otheres work process %d \n", myrank);
+		if (myrank == nprocs -1) {
+            MPI_Isend(mtxC -> data[0], (scatterSize + rem) * p, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD, req+myrank);
             
         } else {
-            MPI_Isend(mtxC -> data[0], scatterSize * p, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD);
+            MPI_Isend(mtxC -> data[0], scatterSize * p, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD, req + myrank);
             
         }
-        
+        printf("MADE IT TO SETHS POINT ON ALL OTHER PROCESSES\n");
     }
     
     
-    MPI_Barrier(MPI_COMM_WORLD);
-    
+ // MPI_Waitall(nprocs, req, MPI_STATUS_IGNORE);
+  /*         MPI_Wait(req, MPI_STATUS_IGNORE);
+           printf("made it1 \n");
+   
+            MPI_Wait(req +1, MPI_STATUS_IGNORE);
+          printf("made it2 \n");
+   
+            MPI_Wait(req+2, MPI_STATUS_IGNORE);
+            printf("made it3 \n");
+       
+             MPI_Wait(req +3, MPI_STATUS_IGNORE);
+           printf("made it4 \n");
+*/
+
     if (myrank == serverRank) {
         
         // Print to File
@@ -161,7 +197,7 @@ int main(int argc, char * argv[]) {
          */
         
         matrix * mtxTest = newMatrix(n, p);
-        matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
+      //  matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
         
         // Test Correctness  DEBUG
         /*
@@ -170,11 +206,15 @@ int main(int argc, char * argv[]) {
          printf("Matrix C: \n");
          printMatrix(mtxC);
          */
-        
-        if(subtractMatrix(mtxC, mtxTest)) {
+		printf("Howdy!!\n");
+//  		MPI_Waitall(nprocs - 1, req + 1, MPI_STATUS_IGNORE);      
+        printf("howdy from proc 0 2nd time \n");
+	/*	if (subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Cache Obliv incorrect \n");
-        }
-        deleteMatrix(mtxTest);
+        } else {
+			printf(" \n Matrix Product Correct!!!!!!!! \n");
+		}
+    */    deleteMatrix(mtxTest);
     }
     
     deleteMatrix(mtxA);
