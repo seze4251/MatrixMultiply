@@ -5,7 +5,7 @@ CC = mpicc
 OBJS = distParaAsync.o matrixFix.o
 
 paraAsyn: $(OBJS)
-	$(CC) -o $@ $^
+	$(CC) -Wall -o $@ $^
 
 $(OBJS): %.o: %.c
 	$(CC) -c $<
