@@ -91,16 +91,15 @@ int main(int argc, char * argv[]) {
     MPI_Request req [nprocs];
     mpi_error = MPI_Ibcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD, req);
     
-    // Server Rank Sends out A
+    // Sends A
     if (myrank == serverRank) {
-        // length - how many rows to send
-        length = scatterSize;
         
+        length = scatterSize;
         for (i = 1; i < nprocs; i++) {
             if (i == nprocs - 1) {
                 length = scatterSize + rem;
             }
-            mpi_error = MPI_Isend(mtxA -> data[ scatterSize + scatterSize * (i -1)], length*m, MPI_DOUBLE, i, tagA, \
+            mpi_error = MPI_Isend(mtxA -> data[ scatterSize * i], length*m, MPI_DOUBLE, i, tagA, \
                                   MPI_COMM_WORLD, (req+i));
         }
         
@@ -111,42 +110,29 @@ int main(int argc, char * argv[]) {
     } else {
         if (myrank == nprocs -1 ) {
             mpi_error = MPI_Irecv(mtxA -> data[0], (scatterSize + rem)*m, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, \
-		req + myrank);
-        
-		} else {
+                                  req + myrank);
+            
+        } else {
             mpi_error = MPI_Irecv(mtxA -> data[0], scatterSize*m, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, req + myrank);
         }
     }
     
-//    MPI_Waitall(nprocs, req, MPI_STATUS_IGNORE);
- /* 		MPI_Wait(req, MPI_STATUS_IGNORE);
-  		printf("made it1 \n");
-
-         MPI_Wait(req +1, MPI_STATUS_IGNORE);
-        printf("made it2 \n");
-
-         MPI_Wait(req+2, MPI_STATUS_IGNORE);
-         printf("made it3 \n");
- 
-          MPI_Wait(req +3, MPI_STATUS_IGNORE);
-        printf("made it4 \n");
-*/
-		if ( myrank != serverRank) {
-			MPI_Wait(req, MPI_STATUS_IGNORE);
-			MPI_Wait(req + myrank, MPI_STATUS_IGNORE);
-		}
-
-	printf("MADE IT HERE ON PROCESS: %d\n", myrank);			
+    if ( myrank != serverRank) {
+        MPI_Wait(req, MPI_STATUS_IGNORE);
+        MPI_Wait(req + myrank, MPI_STATUS_IGNORE);
+    }
+    
+    printf("MADE IT To the Main Multiplication on PROCESS: %d\n", myrank);
     // Perform Matrix Multplicaiton
     int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
-    printf("Process Number:%d  Error Code: %d\n", myrank, err); //Debug
+    printf("Post Multiplicaiton: Process Number:%d  Error Code: %d\n", myrank, err); //Debug
     
     if (myrank == serverRank) {
-
-	for ( i = 1; i < nprocs; i++) {
-	printf("I work on server i = %d",i);
-		MPI_Request_free(req+i);
-	}
+        
+        for ( i = 1; i < nprocs; i++) {
+            MPI_Request_free(req+i);
+            printf("Free requests on Server for: i = %d",i);
+        }
         // Resize rows of A and C
         mtxA -> rows = n;
         mtxC -> rows = n;
@@ -156,38 +142,22 @@ int main(int argc, char * argv[]) {
             if (i == nprocs -1) {
                 length = scatterSize + rem;
             }
-            mpi_error =  MPI_Irecv(mtxC -> data [scatterSize + scatterSize * (i-1)], length * p, MPI_DOUBLE, i, i+tagC, \
-			MPI_COMM_WORLD, req + i);
+            mpi_error =  MPI_Irecv(mtxC -> data [scatterSize * i], length * p, MPI_DOUBLE, i, tagC, \
+                                   MPI_COMM_WORLD, req + i);
         }
+        printf("Finished All Recives on Server Rank");
         
     } else {
-		//MPI_Request_free(req + myrank);
-		//printf("All otheres work process %d \n", myrank);
-		if (myrank == nprocs -1) {
-            MPI_Isend(mtxC -> data[0], (scatterSize + rem) * p, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD, req+myrank);
+        if (myrank == nprocs -1) {
+            MPI_Isend(mtxC -> data[0], (scatterSize + rem) * p, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req+myrank);
             
         } else {
-            MPI_Isend(mtxC -> data[0], scatterSize * p, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD, req + myrank);
+            MPI_Isend(mtxC -> data[0], scatterSize * p, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req + myrank);
             
         }
-        printf("MADE IT TO SETHS POINT ON ALL OTHER PROCESSES\n");
+        printf("Finished All Sends on Non Server Process\n");
     }
     
-    
- // MPI_Waitall(nprocs, req, MPI_STATUS_IGNORE);
-  /*         MPI_Wait(req, MPI_STATUS_IGNORE);
-           printf("made it1 \n");
-   
-            MPI_Wait(req +1, MPI_STATUS_IGNORE);
-          printf("made it2 \n");
-   
-            MPI_Wait(req+2, MPI_STATUS_IGNORE);
-            printf("made it3 \n");
-       
-             MPI_Wait(req +3, MPI_STATUS_IGNORE);
-           printf("made it4 \n");
-*/
-
     if (myrank == serverRank) {
         
         // Print to File
@@ -197,30 +167,37 @@ int main(int argc, char * argv[]) {
          */
         
         matrix * mtxTest = newMatrix(n, p);
-      //  matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
+        printf("Created Test Matrix\n");
         
+        matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
+        printf("Completed Test Multiplication \n")
         // Test Correctness  DEBUG
-        /*
-         printf("Matrix Test: \n");
-         printMatrix(mtxTest);
-         printf("Matrix C: \n");
-         printMatrix(mtxC);
-         */
-		printf("Howdy!!\n");
-//  		MPI_Waitall(nprocs - 1, req + 1, MPI_STATUS_IGNORE);      
-        printf("howdy from proc 0 2nd time \n");
-	/*	if (subtractMatrix(mtxC, mtxTest)) {
+        
+        printf("Matrix Test: \n");
+        printMatrix(mtxTest);
+        printf("Matrix C: \n");
+        printMatrix(mtxC);
+        
+        MPI_Waitall(nprocs - 1, req + 1, MPI_STATUS_IGNORE);
+        printf("Finshed Waitall in Server Process\n");
+        if (subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Cache Obliv incorrect \n");
         } else {
-			printf(" \n Matrix Product Correct!!!!!!!! \n");
-		}
-    */    deleteMatrix(mtxTest);
+            printf(" \n Matrix Product Correct!!!!!!!! \n");
+        }
+        deleteMatrix(mtxTest);
+        printf("Deleted Test Matrix\n")
+        
     }
     
     deleteMatrix(mtxA);
+    printf("Deleted Test Matrix A\n")
     deleteMatrix(mtxB);
+    printf("Deleted Test Matrix B\n")
     deleteMatrix(mtxC);
+    printf("Deleted Matrix C\n")
     MPI_Finalize();
+    printf("Closed MPI\n")
     return 0;
 }
 
