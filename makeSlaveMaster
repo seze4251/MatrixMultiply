@@ -1,0 +1,18 @@
+# Makefile for Matrix Multiplication
+
+.PHONY: clean
+CC = mpicc
+OBJS = slaveMaster.o matrixFix.o
+
+slaveMast: $(OBJS)
+	$(CC) -Wall -o $@ $^
+
+$(OBJS): %.o: %.c
+	$(CC) -c $<
+
+slaveMaster.o: matrixFix.h
+
+matrixFix.o: matrixFix.h
+
+clean: 
+	rm -rf *.o slaveMast
