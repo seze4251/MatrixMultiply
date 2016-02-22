@@ -152,10 +152,12 @@ int main(int argc, char * argv[]) {
     } else {
         if (myrank == nprocs -1) {
             MPI_Isend(mtxC -> data[0], (scatterSize + rem) * p, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req+myrank);
-            MPI_Request_free(req+myrank);
+          	MPI_Wait(req + myrank, MPI_STATUS_IGNORE);
+		  //  MPI_Request_free(req+myrank);
         } else {
             MPI_Isend(mtxC -> data[0], scatterSize * p, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req + myrank);
-            MPI_Request_free(req+myrank);
+           	MPI_Wait(req + myrank, MPI_STATUS_IGNORE);
+		//   MPI_Request_free(req+myrank);
         }
         printf("Finished All Sends on Non Server Process\n");
     }
@@ -198,7 +200,7 @@ int main(int argc, char * argv[]) {
     }
     
     // This Barrier gets my code working, without it I have a seg fault
-    MPI_Barrier(MPI_COMM_WORLD);
+//    MPI_Barrier(MPI_COMM_WORLD);
     deleteMatrix(mtxA);
     printf("Deleted Test Matrix A rank: %d\n",myrank);
     deleteMatrix(mtxB);
