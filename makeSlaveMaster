@@ -5,10 +5,10 @@ CC = mpicc
 OBJS = slaveMaster.o matrixFix.o
 
 slaveMast: $(OBJS)
-	$(CC) -Wall -o $@ $^
+	$(CC) -g -Wall -o $@ $^
 
 $(OBJS): %.o: %.c
-	$(CC) -c $<
+	$(CC) -g -c $<
 
 slaveMaster.o: matrixFix.h
 

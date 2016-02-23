@@ -117,7 +117,7 @@ int main(int argc, char * argv[]) {
                 }
                 
                 MPI_Waitall(nprocs -1, reqF + 1, MPI_STATUS_IGNORE);
-                printf("made it past Waitall")
+                printf("made it past Waitall");
                 // Ending Loop test to make sure I have recived all messages and everyone sent me there message saying that they are done
                 // This loop will be CPU heavy but it is short and at the end
                 
