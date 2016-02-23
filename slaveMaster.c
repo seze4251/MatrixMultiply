@@ -60,7 +60,7 @@ int main(int argc, char * argv[]) {
     }
     mpi_error = MPI_Bcast(buff, 4, MPI_INT, serverRank, MPI_COMM_WORLD); // MPI Bcast blocks until Everyone is here
     n = buff[0]; m = buff[1]; p = buff[2]; load = buff[4];
-    matrix * mtxA, * mtxB;
+    matrix * mtxA, * mtxC;
     matrix * mtxB = newMatrix(m, p);
     
     if (myrank == serverRank) {
@@ -177,7 +177,7 @@ int main(int argc, char * argv[]) {
                         
                     } else if ( status.MPI_TAG == tagC ) {
                         int count;
-                        mpi_error = MPI_Get_count(&status, MPI_DOUBLE, & count);
+                        mpi_error = MPI_Get_count(&status, MPI_DOUBLE, &count);
                         
                         mpi_error = MPI_Irecv(mtxC -> data[place[status.MPI_SOURCE]], count, MPI_DOUBLE, status.MPI_SOURCE,
                                               status.MPI_TAG, MPI_COMM_WORLD, reqR + status.MPI_SOURCE);
@@ -217,7 +217,7 @@ int main(int argc, char * argv[]) {
             if (status.MPI_TAG == tagA) {
                 
                 int count;
-                mpi_error = MPI_Get_count( &status, MPI_DOUBLE, count );
+                mpi_error = MPI_Get_count( &status, MPI_DOUBLE, &count);
                 
                 // Recive matrix A
                 mpi_error = MPI_Irecv(mtxA -> data[0], count, MPI_DOUBLE, serverRank, status.MPI_TAG, MPI_COMM_WORLD, req);
@@ -231,7 +231,7 @@ int main(int argc, char * argv[]) {
                 int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
                 
                 // Send Back
-                mpi_error = MPI_Isend(mtxc -> data[0], count, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req);
+                mpi_error = MPI_Isend(mtxC -> data[0], count, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req);
                 MPI_Wait(req, MPI_STATUS_IGNORE);
             } else if (status.MPI_TAG == tagFinilize) {
                 mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, req);
