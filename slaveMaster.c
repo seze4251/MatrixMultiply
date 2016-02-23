@@ -194,7 +194,7 @@ int main(int argc, char * argv[]) {
                         
                     } else {
                         // Some sort of Error LOG IT
-                        printf("Error: Log not implemented yet, Message Tag inncorrect \n")
+                        printf("Error: Log not implemented yet, Message Tag inncorrect \n");
                         
                     }
                     
