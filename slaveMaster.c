@@ -108,6 +108,7 @@ int main(int argc, char * argv[]) {
             
             // Test End Condition
             if (place[0] == n) {
+                printf("made it to test loop");
                 int end [nprocs]; // ARRAY END when the array is all 1s we quit this huge loop
                 for (i = 1; i < nprocs; i++) {
                     mpi_error = MPI_Isend(trash, 1, MPI_INT, i, tagFinilize, MPI_COMM_WORLD, reqF);
@@ -116,7 +117,7 @@ int main(int argc, char * argv[]) {
                 }
                 
                 MPI_Waitall(nprocs -1, reqF + 1, MPI_STATUS_IGNORE);
-                
+                printf("made it past Waitall")
                 // Ending Loop test to make sure I have recived all messages and everyone sent me there message saying that they are done
                 // This loop will be CPU heavy but it is short and at the end
                 
