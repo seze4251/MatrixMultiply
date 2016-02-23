@@ -165,7 +165,7 @@ int main(int argc, char * argv[]) {
                     if (status.MPI_TAG == tagInit ) {
                         mpi_error = MPI_Irecv(trash, 1, MPI_INT, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, reqR + status.MPI_SOURCE);
                         
-                        mpi_error = MPI_Isend(mtxA -> data[place[0]], load*m, MPI_DOUBLE, status.MPI_SOURCE, tagA, MPI_COMM_WORLD, \
+                        mpi_error = MPI_Isend(mtxA -> data[place[0]], load*m, MPI_DOUBLE, tagA, tagA, MPI_COMM_WORLD, \
                                               reqS + status.MPI_SOURCE);
                         
                         place[status.MPI_SOURCE] = place[0];
@@ -219,7 +219,7 @@ int main(int argc, char * argv[]) {
                 mpi_error = MPI_Get_count( &status, MPI_DOUBLE, &count);
                 
                 // Recive matrix A
-                mpi_error = MPI_Irecv(mtxA -> data[0], count, MPI_DOUBLE, serverRank, status.MPI_TAG, MPI_COMM_WORLD, reqF);
+                mpi_error = MPI_Irecv(mtxA -> data[0], count, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, reqF);
                 
                 int rows = count / m;
                 mtxA -> rows = rows;
@@ -233,6 +233,8 @@ int main(int argc, char * argv[]) {
                 mpi_error = MPI_Isend(mtxC -> data[0], count, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, reqF);
                 MPI_Wait(reqF, MPI_STATUS_IGNORE);
             } else if (status.MPI_TAG == tagFinilize) {
+                mpi_error = MPI_Irecv(trash], 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, reqF);
+                MPI_Request_free(reqF);
                 mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, reqF);
                 MPI_Wait(reqF, MPI_STATUS_IGNORE);
             }
