@@ -89,7 +89,7 @@ int main(int argc, char * argv[]) {
     
     MPI_Status status;
     int i;
-    int flag = 0, tagA = 1, tagC = 2, tagInit = 3, tagFinilize = -1;
+    int flag = 0, tagA = 1, tagC = 2, tagInit = 3, tagFinilize = 53;
     int place[nprocs], trash[1];
     place[0] = 0;  trash[0] = 100;
    
