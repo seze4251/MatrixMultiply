@@ -76,11 +76,10 @@ int main(int argc, char * argv[]) {
     
     
     // Broadcast B
-    if (myrank == serverRank) {
-        MPI_Request reqS [nprocs];
-        MPI_Request reqR [nprocs];
-        MPI_Request reqF [nprocs];
-    }
+    MPI_Request reqS [nprocs];
+    MPI_Request reqR [nprocs];
+    MPI_Request reqF [nprocs];
+    
     
     MPI_Request req;
     
@@ -90,8 +89,9 @@ int main(int argc, char * argv[]) {
     // WildCards: MPI_ANY_TAG,  MPI_ANY_SOURCE, MPI_STATUS_IGNORE
     
     MPI_Status status;
+    int i;
     int flag = 0, tagA = 1, tagC = 2, tagInit = 3, tagFinilize = -1;
-    int trash = 100;
+    int trash [1] = 100;
     int place[nprocs];
     place[0] = 0;
     
@@ -111,8 +111,8 @@ int main(int argc, char * argv[]) {
             if (place[0] == n) {
                 int end [nprocs]; // ARRAY END when the array is all 1s we quit this huge loop
                 for (i = 1; i < nprocs; i++) {
-                    mpi_error = MPI_Isend(&trash, 1, MPI_INT, i, tagFinilize, MPI_COMM_WORLD, req);
-                    mpi_error = MPI_Irecv(&trash, 1, MPI_INT, i, tagFinilize, MPI_COMM_WORLD, reqF + i);
+                    mpi_error = MPI_Isend(trash, 1, MPI_INT, i, tagFinilize, MPI_COMM_WORLD, req);
+                    mpi_error = MPI_Irecv(trash, 1, MPI_INT, i, tagFinilize, MPI_COMM_WORLD, reqF + i);
                     end[i] = 0; // Initialized to 0
                 }
                 
@@ -128,7 +128,7 @@ int main(int argc, char * argv[]) {
                     if (flag == 1) {
                         
                         if (status.MPI_TAG == tagFinilize ) {
-                            mpi_error = MPI_Irecv(&trash, 1, MPI_INT, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, reqR + status.MPI_SOURCE);
+                            mpi_error = MPI_Irecv(trash, 1, MPI_INT, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, reqR + status.MPI_SOURCE);
                             MPI_Wait(reqR + status.MPI_SOURCE, MPI_STATUS_IGNORE);
                             end[status.MPI_SOURCE] = 1;
                             
@@ -164,7 +164,7 @@ int main(int argc, char * argv[]) {
                 if (flag == 1) {
                     
                     if (status.MPI_TAG == tagInit ) {
-                        mpi_error = MPI_Irecv(&trash, 1, MPI_INT, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, reqR + status.MPI_SOURCE);
+                        mpi_error = MPI_Irecv(trash, 1, MPI_INT, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, reqR + status.MPI_SOURCE);
                         
                         mpi_error = MPI_Isend(mtxA -> data[place[0]], load*m, MPI_DOUBLE, status.MPI_SOURCE, tagA, MPI_COMM_WORLD, \
                                               reqS + status.MPI_SOURCE);
@@ -225,17 +225,17 @@ int main(int argc, char * argv[]) {
                 int rows = count / m;
                 mtxA -> rows = rows;
                 mtxC -> rows = rows;
-                MPI_Wait(req, MPI_STATUS_IGNORE);
+                MPI_Wait(&req, MPI_STATUS_IGNORE);
                 
                 // Compute Product
                 int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
                 
                 // Send Back
                 mpi_error = MPI_Isend(mtxc -> data[0], count, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req);
-                MPI_Wait(req, MPI_STATUS_IGNORE);
+                MPI_Wait(&req, MPI_STATUS_IGNORE);
             } else if (status.MPI_TAG == tagFinilize) {
                 mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, req);
-                MPI_Wait(req, MPI_STATUS_IGNORE);
+                MPI_Wait(&req, MPI_STATUS_IGNORE);
             }
         }
     }
@@ -259,13 +259,13 @@ int main(int argc, char * argv[]) {
         matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
         printf("Completed Test Multiplication \n");
         // Test Correctness  DEBUG
-       /*printf("Matrix Test: \n");
+        /*printf("Matrix Test: \n");
          printMatrix(mtxTest);
          printf("Matrix C: \n");
          printMatrix(mtxC);
          */
         
-
+        
         if (subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Cache Obliv incorrect \n");
         } else {
