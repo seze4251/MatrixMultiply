@@ -182,6 +182,11 @@ int main(int argc, char * argv[]) {
                         mpi_error = MPI_Irecv(mtxC -> data[place[status.MPI_SOURCE]], count, MPI_DOUBLE, status.MPI_SOURCE,
                                               status.MPI_TAG, MPI_COMM_WORLD, reqR + status.MPI_SOURCE);
                         
+                        if (place[0] + load >= n) {
+                            load = n - place[0];
+                        }
+                        
+                        
                         // Send the new Message
                         mpi_error = MPI_Isend(mtxA -> data[place[0]], load*m, MPI_DOUBLE, status.MPI_SOURCE, tagA, MPI_COMM_WORLD, \
                                               reqS + status.MPI_SOURCE);
