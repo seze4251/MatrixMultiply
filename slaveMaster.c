@@ -49,7 +49,7 @@ int main(int argc, char * argv[]) {
     if (myrank == serverRank) {
         while (1) {
             printf("Please enter 3 ints to dimensionlize the Matrix followed by a int for load distribution (4 total) \n");
-            int check = scanf("%d %d %d",&n, &m, &p, &load);
+            int check = scanf("%d %d %d %d",&n, &m, &p, &load);
             if (n > 0 && m > 0 && p > 0) {
                 break;
             } else {
@@ -84,7 +84,7 @@ int main(int argc, char * argv[]) {
     
     MPI_Request req;
     
-    mpi_error = MPI_Ibcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD, req);
+    mpi_error = MPI_Ibcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD, &req);
     
     // Define Stuff for main loop
     // WildCards: MPI_ANY_TAG,  MPI_ANY_SOURCE, MPI_STATUS_IGNORE
@@ -92,7 +92,7 @@ int main(int argc, char * argv[]) {
     MPI_Status status;
     int flag = 0, tagA = 1, tagC = 2, tagInit = 3, tagFinilize = -1;
     int trash = 100;
-    int place[numprocs];
+    int place[nprocs];
     place[0] = 0;
     
     
@@ -129,7 +129,7 @@ int main(int argc, char * argv[]) {
                         
                         if (status.MPI_TAG == tagFinilize ) {
                             mpi_error = MPI_Irecv(&trash, 1, MPI_INT, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, reqR + status.MPI_SOURCE);
-                            MPI_Wait(reqR + status.MPI_SOURCE);
+                            MPI_Wait(reqR + status.MPI_SOURCE, MPI_STATUS_IGNORE);
                             end[status.MPI_SOURCE] = 1;
                             
                         } else if(status.MPI_TAG == tagC) {
@@ -225,17 +225,17 @@ int main(int argc, char * argv[]) {
                 int rows = count / m;
                 mtxA -> rows = rows;
                 mtxC -> rows = rows;
-                MPI_Wait(req);
+                MPI_Wait(req, MPI_STATUS_IGNORE);
                 
                 // Compute Product
                 int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
                 
                 // Send Back
                 mpi_error = MPI_Isend(mtxc -> data[0], count, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req);
-                MPI_Wait(req);
+                MPI_Wait(req, MPI_STATUS_IGNORE);
             } else if (status.MPI_TAG == tagFinilize) {
                 mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, req);
-                MPI_Wait(req);
+                MPI_Wait(req, MPI_STATUS_IGNORE);
             }
         }
     }
@@ -259,15 +259,13 @@ int main(int argc, char * argv[]) {
         matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
         printf("Completed Test Multiplication \n");
         // Test Correctness  DEBUG
-        MPI_Waitall(nprocs - 1, req + 1, MPI_STATUS_IGNORE);
-        
-        /*        printf("Matrix Test: \n");
+       /*printf("Matrix Test: \n");
          printMatrix(mtxTest);
          printf("Matrix C: \n");
          printMatrix(mtxC);
          */
         
-        printf("Finshed Waitall in Server Process\n");
+
         if (subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Cache Obliv incorrect \n");
         } else {
