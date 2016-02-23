@@ -160,10 +160,12 @@ int main(int argc, char * argv[]) {
                 
                 // Non Blocking Probe
                 MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, & status);
+                printf("SERVER: Flag Value =  %d \n", flag);
                 
                 if (flag == 1) {
                     
                     if (status.MPI_TAG == tagInit ) {
+                        printf("SERVER: Initilize Message from Process %d \n",status.MPI_SOURCE);
                         mpi_error = MPI_Irecv(trash, 1, MPI_INT, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, reqR + status.MPI_SOURCE);
                         
                         mpi_error = MPI_Isend(mtxA -> data[place[0]], load*m, MPI_DOUBLE, tagA, tagA, MPI_COMM_WORLD, \
@@ -176,6 +178,7 @@ int main(int argc, char * argv[]) {
                         MPI_Request_free(reqR + status.MPI_SOURCE);
                         
                     } else if ( status.MPI_TAG == tagC ) {
+                        printf("SERVER: Data message from Process %d \n", status.MPI_SOURCE);
                         int count;
                         mpi_error = MPI_Get_count(&status, MPI_DOUBLE, &count);
                         
@@ -205,6 +208,7 @@ int main(int argc, char * argv[]) {
                     
                 } else if( flag == 0) {
                     // Compute 1 row of A and check back for more messages
+                    printf("SERVER: Compute: row = %d\n",place[0]);
                     int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, place[0], place[0], 0, mtxA->cols, 0, mtxB->cols);
                     place[0] += 1;
                 }
@@ -213,6 +217,7 @@ int main(int argc, char * argv[]) {
             // All Other Processes
             if (mtxA -> rows == 2 * load) {
                 //Uninitialized
+                printf("Rank %d: Send Initialize\n",myrank);
                 mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagInit, MPI_COMM_WORLD, reqF);
                 MPI_Request_free(reqF);
             }
@@ -220,6 +225,7 @@ int main(int argc, char * argv[]) {
             MPI_Probe(serverRank, MPI_ANY_TAG, MPI_COMM_WORLD, & status); //Blocking probe to not waste CPU time
             
             if (status.MPI_TAG == tagA) {
+                printf("Rank %d: Recive Data\n",myrank);
                 
                 int count;
                 mpi_error = MPI_Get_count( &status, MPI_DOUBLE, &count);
@@ -239,6 +245,7 @@ int main(int argc, char * argv[]) {
                 mpi_error = MPI_Isend(mtxC -> data[0], count, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, reqF);
                 MPI_Wait(reqF, MPI_STATUS_IGNORE);
             } else if (status.MPI_TAG == tagFinilize) {
+                printf("Rank %d: Finilize time \n");
                 mpi_error = MPI_Irecv(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, reqF);
                 MPI_Request_free(reqF);
                 mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, reqF);
