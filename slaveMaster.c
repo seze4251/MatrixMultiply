@@ -61,25 +61,40 @@ int main(int argc, char * argv[]) {
     mpi_error = MPI_Bcast(buff, 4, MPI_INT, serverRank, MPI_COMM_WORLD); // MPI Bcast blocks until Everyone is here
     n = buff[0]; m = buff[1]; p = buff[2]; load = buff[4];
     
-    matrix * mtxA = newMatrix(n, m);
     matrix * mtxB = newMatrix(m, p);
-    matrix * mtxC = newMatrix(n, p);
     
     if (myrank == serverRank) {
+        matrix * mtxA = newMatrix(n, m);
+        matrix * mtxC = newMatrix(n, p);
         randomizeMatrix(mtxA);
         randomizeMatrix(mtxB);
         starttime = MPI_Wtime();
+    } else {
+        matrix * mtxA = newMatrix(2 * load, m);
+        matrix * mtxC = newMatrix(2 * load, p);
     }
-
+    
     
     // Broadcast B
-    MPI_Request req [nprocs];
+    if (myrank == serverRank) {
+        MPI_Request reqS [nprocs];
+        MPI_Request reqR [nprocs];
+        MPI_Request reqF [nprocs];
+    }
+    
+    MPI_Request req;
+    
     mpi_error = MPI_Ibcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD, req);
     
     // Define Stuff for main loop
     // WildCards: MPI_ANY_TAG,  MPI_ANY_SOURCE, MPI_STATUS_IGNORE
+    
     MPI_Status status;
-    int flag = 0, tagA = 1, tagC = 2, tagInit = 3;
+    int flag = 0, tagA = 1, tagC = 2, tagInit = 3, tagFinilize = -1;
+    int trash = 100;
+    int place[numprocs];
+    place[0] = 0;
+    
     
     // Get matrix B B
     if (myrank != serverRank) {
@@ -91,138 +106,140 @@ int main(int argc, char * argv[]) {
     
     while (1) {
         if (myrank == serverRank) {
-            // Probe message and put contents into status
-            MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, & status)
             
-            if (flag == 1) {
-                int count;
-                mpi_error = MPI_Get_count( &status, MPI_DOUBLE, count )
-                
-                if (status.MPI_TAG == tagInit ) {
-                    // Initialize - For initializer tag, do not read message, just send data
-                    mpi_error = MPI_Isend(mtxA -> data[ Proper location], load*m, MPI_Datatype, status.MPI_ANY_SOURCE, tagA, MPI_COMM_WORLD, \
-                                          req + status.MPI_SOURCE);
-                  
-                } else if ( status.MPI_TAG == tagC ) {
-                    // Normal Procedure
-                    // Get the Message
-                    mpi_error = MPI_Irecv(mtxC -> data[0], count, MPI_Datatype datatype, status.MPI_SOURCE,
-                                          status.MPI_TAG, MPI_COMM_WORLD, req + status.MPI_SOURCE);
-                    // Send the new Message
-                    mpi_error = MPI_Isend(mtxA -> data[ Proper location], load*m, MPI_Datatype, status.MPI_ANY_SOURCE, tagA, MPI_COMM_WORLD, \
-                                          req + status.MPI_SOURCE);
-                    // Do something here :)
-                    
-                    MPI_Wait(req + status.MPI_SOURCE, MPI_STATUS_IGNORE);
-                    // Put buffer into appropriate place in matrixC
-                    
-                } else {
-                    // Some sort of Error LOG IT
-                    
-                }
-                flag = 0;
-            } else {
-                // Compute 1 row of A and check back for more messages
-            }
-            
-            // potentially test request objects to make sure all communicaiton went properly
-
-            } else {
-                // All Other Processes
-                
-                if (mtxA -> rows == n) {
-                    //If mtxA rows equal A no information has been sent in
-                    // Send an initialize message
+            // Test End Condition
+            if (place[0] == n) {
+                int end [nprocs]; // ARRAY END when the array is all 1s we quit this huge loop
+                for (i = 1; i < nprocs; i++) {
+                    mpi_error = MPI_Isend(&trash, 1, MPI_INT, i, tagFinilize, MPI_COMM_WORLD, req);
+                    mpi_error = MPI_Irecv(&trash, 1, MPI_INT, i, tagFinilize, MPI_COMM_WORLD, reqF + i);
+                    end[i] = 0; // Initialized to 0
                 }
                 
-                MPI_Iprobe(serverRank, tagA, MPI_COMM_WORLD, &flag, & status)
+                MPI_Waitall(NPROCS -1, reqF, MPI_STATUS_IGNORE);
+                
+                // Ending Loop test to make sure I have recived all messages and everyone sent me there message saying that they are done
+                // This loop will be CPU heavy but it is short and at the end
+                
+                int finished = 0;
+                while (finished == 0) {
+                    MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, & status);
+                    
+                    if (flag == 1) {
+                        
+                        if (status.MPI_TAG == tagFinilize ) {
+                            mpi_error = MPI_Irecv(&trash, 1, MPI_INT, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, reqR + status.MPI_SOURCE);
+                            MPI_Wait(reqR + status.MPI_SOURCE);
+                            end[status.MPI_SOURCE] = 1;
+                            
+                        } else if(status.MPI_TAG == tagC) {
+                            int count;
+                            mpi_error = MPI_Get_count(&status, MPI_DOUBLE, & count);
+                            
+                            mpi_error = MPI_Irecv(mtxC -> data[place[status.MPI_SOURCE]], count, MPI_DOUBLE, status.MPI_SOURCE,
+                                                  status.MPI_TAG, MPI_COMM_WORLD, reqR + status.MPI_SOURCE);
+                            MPI_Wait(reqR + status.MPI_SOURCE, MPI_STATUS_IGNORE);
+                            MPI_Request_free(reqR);
+                            
+                        }
+                    }else {
+                        int boolean = 0;
+                        for (i = 1; i < nprocs; i++) {
+                            if (end[i] == 1) {
+                                boolean = 1;
+                            }
+                        }
+                        if (trip == 0) {
+                            finished == 1;
+                        }
+                    }
+                }
+                break;
+                
+            } else {
+                
+                // Non Blocking Probe
+                MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, & status);
                 
                 if (flag == 1) {
-                    int count;
-                    mpi_error = MPI_Get_count( &status, MPI_DOUBLE, count )
-                    // Recive matrix A
                     
-                    // Compute Product
+                    if (status.MPI_TAG == tagInit ) {
+                        mpi_error = MPI_Irecv(&trash, 1, MPI_INT, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, reqR + status.MPI_SOURCE);
+                        
+                        mpi_error = MPI_Isend(mtxA -> data[place[0]], load*m, MPI_DOUBLE, status.MPI_SOURCE, tagA, MPI_COMM_WORLD, \
+                                              reqS + status.MPI_SOURCE);
+                        
+                        place[status.MPI_SOURCE] = place[0];
+                        place[0] += load;
+                        
+                        //Free Request arrive Request
+                        MPI_Request_free(reqR + status.MPI_SOURCE));
+                        
+                    } else if ( status.MPI_TAG == tagC ) {
+                        int count;
+                        mpi_error = MPI_Get_count(&status, MPI_DOUBLE, & count);
+                        
+                        mpi_error = MPI_Irecv(mtxC -> data[place[status.MPI_SOURCE]], count, MPI_DOUBLE, status.MPI_SOURCE,
+                                              status.MPI_TAG, MPI_COMM_WORLD, reqR + status.MPI_SOURCE);
+                        
+                        // Send the new Message
+                        mpi_error = MPI_Isend(mtxA -> data[place[0]], load*m, MPI_DOUBLE, status.MPI_SOURCE, tagA, MPI_COMM_WORLD, \
+                                              reqS + status.MPI_SOURCE);
+                        
+                        place[status.MPI_SOURCE] = place[0];
+                        place[0] += load;
+                        
+                        MPI_Wait(reqR + status.MPI_SOURCE, MPI_STATUS_IGNORE);
+                        MPI_Request_free(reqR);
+                        
+                    } else {
+                        // Some sort of Error LOG IT
+                        printf("Error: Log not implemented yet, Message Tag inncorrect \n")
+                        
+                    }
                     
-                    // Send Back
-                    
-                } else {
-                    // Do something here
+                } else if( flag == 0) {
+                    // Compute 1 row of A and check back for more messages
+                    int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, place[0], place[0], 0, mtxA->cols, 0, mtxB->cols);
+                    place[0] += 1;
                 }
+            }
+        } else {
+            // All Other Processes
+            if (mtxA -> rows == 2 * load) {
+                //Uninitialized
+                mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagInit, MPI_COMM_WORLD, req);
+                MPI_Request_free(req + myrank);
+            }
+            
+            MPI_Probe(serverRank, MPI_ANY_TAG, MPI_COMM_WORLD, & status); //Blocking probe to not waste CPU time
+            
+            if (status.MPI_TAG == tagA) {
                 
-            
-            
-        }
-    }
-    
-    // This stuff is just a reference while I write the new program
-    /*
-    // Sends A
-    if (myrank == serverRank) {
-        
-        length = scatterSize;
-        for (i = 1; i < nprocs; i++) {
-            if (i == nprocs - 1) {
-                length = scatterSize + rem;
+                int count;
+                mpi_error = MPI_Get_count( &status, MPI_DOUBLE, count );
+                
+                // Recive matrix A
+                mpi_error = MPI_Irecv(mtxA -> data[0], count, MPI_DOUBLE, serverRank, status.MPI_TAG, MPI_COMM_WORLD, req);
+                
+                int rows = count / m;
+                mtxA -> rows = rows;
+                mtxC -> rows = rows;
+                MPI_Wait(req);
+                
+                // Compute Product
+                int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
+                
+                // Send Back
+                mpi_error = MPI_Isend(mtxc -> data[0], count, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req);
+                MPI_Wait(req);
+            } else if (status.MPI_TAG == tagFinilize) {
+                mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, req);
+                MPI_Wait(req);
             }
-            mpi_error = MPI_Isend(mtxA -> data[ scatterSize * i], length*m, MPI_DOUBLE, i, tagA, \
-                                  MPI_COMM_WORLD, (req+i));
-        }
-        
-        // Set rows of A and C so that serverProcess does work!
-        mtxA -> rows = scatterSize;
-        mtxC -> rows = scatterSize;
-        
-    } else {
-        if (myrank == nprocs -1 ) {
-            mpi_error = MPI_Irecv(mtxA -> data[0], (scatterSize + rem)*m, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, \
-                                  req + myrank);
-            
-        } else {
-            mpi_error = MPI_Irecv(mtxA -> data[0], scatterSize*m, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, req + myrank);
         }
     }
     
-    if ( myrank != serverRank) {
-        MPI_Wait(req, MPI_STATUS_IGNORE);
-        MPI_Wait(req + myrank, MPI_STATUS_IGNORE);
-    }
-    
-    printf("MADE IT To the Main Multiplication on PROCESS: %d\n", myrank);
-    // Perform Matrix Multplicaiton
-    int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
-    printf("Post Multiplicaiton: Process Number:%d  Error Code: %d\n", myrank, err); //Debug
-    
-    if (myrank == serverRank) {
-        
-        for ( i = 1; i < nprocs; i++) {
-            MPI_Request_free(req+i);
-            printf("Free requests on Server for: i = %d\n",i);
-        }
-        // Resize rows of A and C
-        mtxA -> rows = n;
-        mtxC -> rows = n;
-        length = scatterSize;
-        
-        for (i = 1; i < nprocs; i++) {
-            if (i == nprocs -1) {
-                length = scatterSize + rem;
-            }
-            mpi_error =  MPI_Irecv(mtxC -> data [scatterSize * i], length * p, MPI_DOUBLE, i, tagC, \
-                                   MPI_COMM_WORLD, req + i);
-        }
-        printf("Finished All Recives on Server Rank");
-        
-    } else {
-        if (myrank == nprocs -1) {
-            MPI_Isend(mtxC -> data[0], (scatterSize + rem) * p, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req+myrank);
-			MPI_Request_free(req+myrank);            
-        } else {
-            MPI_Isend(mtxC -> data[0], scatterSize * p, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req + myrank);
-            MPI_Request_free(req+myrank);
-        }
-        printf("Finished All Sends on Non Server Process\n");
-    }
     
     if (myrank == serverRank) {
         
@@ -235,22 +252,22 @@ int main(int argc, char * argv[]) {
          fprintf(file, " %d \t\t %lu /n",m,total_t);
          fclose(file);
          */
-        /*
+        
         matrix * mtxTest = newMatrix(n, p);
         printf("Created Test Matrix\n");
         
         matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
         printf("Completed Test Multiplication \n");
         // Test Correctness  DEBUG
-	    MPI_Waitall(nprocs - 1, req + 1, MPI_STATUS_IGNORE);
-
-/*        printf("Matrix Test: \n");
-        printMatrix(mtxTest);
-        printf("Matrix C: \n");
-        printMatrix(mtxC);
-  */      
-        //MPI_Waitall(nprocs - 1, req + 1, MPI_STATUS_IGNORE);
-     /*   printf("Finshed Waitall in Server Process\n");
+        MPI_Waitall(nprocs - 1, req + 1, MPI_STATUS_IGNORE);
+        
+        /*        printf("Matrix Test: \n");
+         printMatrix(mtxTest);
+         printf("Matrix C: \n");
+         printMatrix(mtxC);
+         */
+        
+        printf("Finshed Waitall in Server Process\n");
         if (subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Cache Obliv incorrect \n");
         } else {
@@ -260,9 +277,7 @@ int main(int argc, char * argv[]) {
         printf("Deleted Test Matrix Server\n");
         
     }
-*/
-	// This Barrier gets my code working, without it I have a seg fault
-	MPI_Barrier(MPI_COMM_WORLD);
+    
     deleteMatrix(mtxA);
     printf("Deleted Test Matrix A rank: %d\n",myrank);
     deleteMatrix(mtxB);

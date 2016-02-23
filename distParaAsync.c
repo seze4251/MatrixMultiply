@@ -153,11 +153,10 @@ int main(int argc, char * argv[]) {
         if (myrank == nprocs -1) {
             MPI_Isend(mtxC -> data[0], (scatterSize + rem) * p, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req+myrank);
           	MPI_Wait(req + myrank, MPI_STATUS_IGNORE);
-		  //  MPI_Request_free(req+myrank);
+
         } else {
             MPI_Isend(mtxC -> data[0], scatterSize * p, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req + myrank);
            	MPI_Wait(req + myrank, MPI_STATUS_IGNORE);
-		//   MPI_Request_free(req+myrank);
         }
         printf("Finished All Sends on Non Server Process\n");
     }
@@ -179,15 +178,7 @@ int main(int argc, char * argv[]) {
         
         matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
         printf("Completed Test Multiplication \n");
-        // Test Correctness  DEBUG
-        MPI_Waitall(nprocs - 1, req + 1, MPI_STATUS_IGNORE);
-        
-        /*        printf("Matrix Test: \n");
-         printMatrix(mtxTest);
-         printf("Matrix C: \n");
-         printMatrix(mtxC);
-         */
-        //MPI_Waitall(nprocs - 1, req + 1, MPI_STATUS_IGNORE);
+        MPI_Waitall(nprocs - 1, req + 1, MPI_STATUS_IGNORE);  // This wait all should be higher for timing but it hides communication being down here
         printf("Finshed Waitall in Server Process\n");
         if (subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Cache Obliv incorrect \n");
@@ -199,8 +190,7 @@ int main(int argc, char * argv[]) {
         
     }
     
-    // This Barrier gets my code working, without it I have a seg fault
-//    MPI_Barrier(MPI_COMM_WORLD);
+
     deleteMatrix(mtxA);
     printf("Deleted Test Matrix A rank: %d\n",myrank);
     deleteMatrix(mtxB);
