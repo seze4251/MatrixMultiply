@@ -233,7 +233,7 @@ int main(int argc, char * argv[]) {
                 mpi_error = MPI_Isend(mtxC -> data[0], count, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, reqF);
                 MPI_Wait(reqF, MPI_STATUS_IGNORE);
             } else if (status.MPI_TAG == tagFinilize) {
-                mpi_error = MPI_Irecv(trash], 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, reqF);
+                mpi_error = MPI_Irecv(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, reqF);
                 MPI_Request_free(reqF);
                 mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, reqF);
                 MPI_Wait(reqF, MPI_STATUS_IGNORE);
