@@ -62,7 +62,10 @@ int main(int argc, char * argv[]) {
         //	printMatrix(mtxA);
         //	printf("\n\n");
     }
-    clock_t start_t = clock();
+    double starttime, endtime, totaltime;
+    if (myrank == serverRank) {
+         starttime = MPI_Wtime();
+    }
     
     MPI_Bcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD);
     
@@ -140,12 +143,10 @@ int main(int argc, char * argv[]) {
     MPI_Barrier(MPI_COMM_WORLD);
     printf("made it here222222 Process Number: %d\n", myrank);
     if (myrank == serverRank) {
-        // End Clock
-        printf("Start Clock: %lu\n",start_t);
-        clock_t end_t = clock();
-        printf("End Clock: %lu\n " ,end_t);
-        clock_t total_t = (double) (end_t - start_t) / CLOCKS_PER_SEC;
-        printf("Total Time: %lu \n", total_t);
+        endtime = MPI_Wtime();
+        totaltime = endtime - starttime;
+        printf("Total Running Time: %5.3f",totaltime);
+        
         // Print to File
         FILE * file = fopen("OutputParallel","a");
         fprintf(file, " %d \t\t %lu /n",m,total_t);
