@@ -97,7 +97,7 @@ int main(int argc, char * argv[]) {
     
     // Get matrix B B
     if (myrank != serverRank) {
-        MPI_Wait(req, MPI_STATUS_IGNORE);
+        MPI_Wait(reqF, MPI_STATUS_IGNORE);
     }
     
     // Matrix A, B and C are purposely built large enough that they can hold any size matrix
