@@ -60,18 +60,18 @@ int main(int argc, char * argv[]) {
     }
     mpi_error = MPI_Bcast(buff, 4, MPI_INT, serverRank, MPI_COMM_WORLD); // MPI Bcast blocks until Everyone is here
     n = buff[0]; m = buff[1]; p = buff[2]; load = buff[4];
-    
+    matrix * mtxA, * mtxB;
     matrix * mtxB = newMatrix(m, p);
     
     if (myrank == serverRank) {
-        matrix * mtxA = newMatrix(n, m);
-        matrix * mtxC = newMatrix(n, p);
+        mtxA = newMatrix(n, m);
+        mtxC = newMatrix(n, p);
         randomizeMatrix(mtxA);
         randomizeMatrix(mtxB);
         starttime = MPI_Wtime();
     } else {
-        matrix * mtxA = newMatrix(2 * load, m);
-        matrix * mtxC = newMatrix(2 * load, p);
+         mtxA = newMatrix(2 * load, m);
+        mtxC = newMatrix(2 * load, p);
     }
     
     
@@ -81,9 +81,9 @@ int main(int argc, char * argv[]) {
     MPI_Request reqF [nprocs];
     
     
-    MPI_Request req;
+    MPI_Request * req;
     
-    mpi_error = MPI_Ibcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD, &req);
+    mpi_error = MPI_Ibcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD, req);
     
     // Define Stuff for main loop
     // WildCards: MPI_ANY_TAG,  MPI_ANY_SOURCE, MPI_STATUS_IGNORE
@@ -91,9 +91,9 @@ int main(int argc, char * argv[]) {
     MPI_Status status;
     int i;
     int flag = 0, tagA = 1, tagC = 2, tagInit = 3, tagFinilize = -1;
-    int trash [1] = 100;
-    int place[nprocs];
-    place[0] = 0;
+    int place[nprocs], trash[1];
+    place[0] = 0;  trash[0] = 100;
+   
     
     
     // Get matrix B B
@@ -116,7 +116,7 @@ int main(int argc, char * argv[]) {
                     end[i] = 0; // Initialized to 0
                 }
                 
-                MPI_Waitall(NPROCS -1, reqF, MPI_STATUS_IGNORE);
+                MPI_Waitall(nprocs -1, reqF + 1, MPI_STATUS_IGNORE);
                 
                 // Ending Loop test to make sure I have recived all messages and everyone sent me there message saying that they are done
                 // This loop will be CPU heavy but it is short and at the end
@@ -149,12 +149,12 @@ int main(int argc, char * argv[]) {
                                 boolean = 1;
                             }
                         }
-                        if (trip == 0) {
+                        if (boolean == 0) {
                             finished == 1;
                         }
                     }
                 }
-                break;
+                break; // Exit the outmost While Loop
                 
             } else {
                 
@@ -173,7 +173,7 @@ int main(int argc, char * argv[]) {
                         place[0] += load;
                         
                         //Free Request arrive Request
-                        MPI_Request_free(reqR + status.MPI_SOURCE));
+                        MPI_Request_free(reqR + status.MPI_SOURCE);
                         
                     } else if ( status.MPI_TAG == tagC ) {
                         int count;
@@ -225,17 +225,17 @@ int main(int argc, char * argv[]) {
                 int rows = count / m;
                 mtxA -> rows = rows;
                 mtxC -> rows = rows;
-                MPI_Wait(&req, MPI_STATUS_IGNORE);
+                MPI_Wait(req, MPI_STATUS_IGNORE);
                 
                 // Compute Product
                 int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
                 
                 // Send Back
                 mpi_error = MPI_Isend(mtxc -> data[0], count, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req);
-                MPI_Wait(&req, MPI_STATUS_IGNORE);
+                MPI_Wait(req, MPI_STATUS_IGNORE);
             } else if (status.MPI_TAG == tagFinilize) {
                 mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, req);
-                MPI_Wait(&req, MPI_STATUS_IGNORE);
+                MPI_Wait(req, MPI_STATUS_IGNORE);
             }
         }
     }
