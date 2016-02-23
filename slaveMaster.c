@@ -81,9 +81,8 @@ int main(int argc, char * argv[]) {
     MPI_Request reqF [nprocs];
     
     
-    MPI_Request * req;
     
-    mpi_error = MPI_Ibcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD, req);
+    mpi_error = MPI_Ibcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD, reqF);
     
     // Define Stuff for main loop
     // WildCards: MPI_ANY_TAG,  MPI_ANY_SOURCE, MPI_STATUS_IGNORE
@@ -111,7 +110,7 @@ int main(int argc, char * argv[]) {
             if (place[0] == n) {
                 int end [nprocs]; // ARRAY END when the array is all 1s we quit this huge loop
                 for (i = 1; i < nprocs; i++) {
-                    mpi_error = MPI_Isend(trash, 1, MPI_INT, i, tagFinilize, MPI_COMM_WORLD, req);
+                    mpi_error = MPI_Isend(trash, 1, MPI_INT, i, tagFinilize, MPI_COMM_WORLD, reqF);
                     mpi_error = MPI_Irecv(trash, 1, MPI_INT, i, tagFinilize, MPI_COMM_WORLD, reqF + i);
                     end[i] = 0; // Initialized to 0
                 }
@@ -208,8 +207,8 @@ int main(int argc, char * argv[]) {
             // All Other Processes
             if (mtxA -> rows == 2 * load) {
                 //Uninitialized
-                mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagInit, MPI_COMM_WORLD, req);
-                MPI_Request_free(req + myrank);
+                mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagInit, MPI_COMM_WORLD, reqF);
+                MPI_Request_free(reqF);
             }
             
             MPI_Probe(serverRank, MPI_ANY_TAG, MPI_COMM_WORLD, & status); //Blocking probe to not waste CPU time
@@ -220,22 +219,22 @@ int main(int argc, char * argv[]) {
                 mpi_error = MPI_Get_count( &status, MPI_DOUBLE, &count);
                 
                 // Recive matrix A
-                mpi_error = MPI_Irecv(mtxA -> data[0], count, MPI_DOUBLE, serverRank, status.MPI_TAG, MPI_COMM_WORLD, req);
+                mpi_error = MPI_Irecv(mtxA -> data[0], count, MPI_DOUBLE, serverRank, status.MPI_TAG, MPI_COMM_WORLD, reqF);
                 
                 int rows = count / m;
                 mtxA -> rows = rows;
                 mtxC -> rows = rows;
-                MPI_Wait(req, MPI_STATUS_IGNORE);
+                MPI_Wait(reqF, MPI_STATUS_IGNORE);
                 
                 // Compute Product
                 int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
                 
                 // Send Back
-                mpi_error = MPI_Isend(mtxC -> data[0], count, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req);
+                mpi_error = MPI_Isend(mtxC -> data[0], count, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, reqF);
                 MPI_Wait(req, MPI_STATUS_IGNORE);
             } else if (status.MPI_TAG == tagFinilize) {
-                mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, req);
-                MPI_Wait(req, MPI_STATUS_IGNORE);
+                mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, reqF);
+                MPI_Wait(reqF, MPI_STATUS_IGNORE);
             }
         }
     }
