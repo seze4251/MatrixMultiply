@@ -172,9 +172,9 @@ int main(int argc, char * argv[]) {
             } else {
                 
                 // Non Blocking Probe
-                MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, & status);
-                flag = 1;
+                MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, & flag, & status);
                 printf("SERVER: Flag Value =  %d \n", flag);
+                
                 //   printf("Server: Recv Message from rank %d", status.MPI_SOURCE);
                 if (flag == 1) {
                     
