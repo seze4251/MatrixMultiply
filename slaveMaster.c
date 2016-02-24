@@ -170,8 +170,6 @@ int main(int argc, char * argv[]) {
                 // Wait for all messages to go through to avoid seg fault
                 MPI_Waitall(hasData, reqS, MPI_STATUS_IGNORE);
                 
-                
-                
             } else {
                 
                 // Non Blocking Probe
@@ -270,7 +268,7 @@ int main(int argc, char * argv[]) {
             } else if (status.MPI_TAG == tagFinilize) {
                 mpi_error = MPI_Irecv(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, reqF);
                 MPI_Wait(reqF, MPI_STATUS_IGNORE);
-                 printf("Rank %d: Finilize recived, Exiting MPI \n", myrank);
+                printf("Rank %d: Finilize recived, Exiting MPI \n", myrank);
             }
         }
     }
