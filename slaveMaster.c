@@ -123,12 +123,11 @@ int main(int argc, char * argv[]) {
             if (place[0] == n) {
                 printf("SERVER: Starting Ending Loop");
                 // When Terminate is not equal to 0 exit
-                int terminate = 0;
                 int hasData = 0;
                 
                 for (i = 1; i < nprocs; i++) {
                     if (place[i] != 0) {
-                        hasdata += 1;
+                        hasData += 1;
                     }
                 }
                 
