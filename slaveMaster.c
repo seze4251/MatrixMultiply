@@ -16,8 +16,8 @@
 void handleMasterInit(matrix * mtxA, int * trash, int place [], int load, int m, int tagA, MPI_Status status, MPI_Request req []);
 void handleMasterBody(matrix * mtxA, matrix * mtxC, int place [], int load, int m, int tagA, int n, MPI_Status status, MPI_Request req []);
 void handleMasterCompute(matrix * mtxA, matrix * mtxB, matrix * mtxC, int place []);
-void handleMasterFinishShort(int hasData, int trash [], int tagFinilize, MPI_Request req []);
-void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [], int hasDataint tagC, int tagFinilize, \
+void handleMasterFinishShort(int hasData, int trash [], int tagFinilize, int nprocs, MPI_Request req []);
+void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [], int hasData, int tagC, int tagFinilize, int nprocs,
                             MPI_Status status, MPI_Request req []);
 
 void finish(int hasData, int trash [], int tagFinilize, MPI_Request req []);
@@ -132,11 +132,11 @@ int main(int argc, char * argv[]) {
                 
                 if (!hasData) {
                     // Case 1: Master did all the work (small matrix)
-                    handleMasterFinishShort(hasData, trash, tagFinilize, req);
+                    handleMasterFinishShort(hasData, trash, tagFinilize, nprocs, req);
                     break;
                 } else {
                     // Case 2: Others Have data
-                    handleMasterFinishLong(mtxC, nprocs, trash, place, hasData, tagC, tagFinilize, status, req);
+                    handleMasterFinishLong(mtxC, nprocs, trash, place, hasData, tagC, tagFinilize, nprocs, status, req);
                     break;
                 }
             }
@@ -231,11 +231,11 @@ void handleMasterCompute(matrix * mtxA, matrix * mtxB, matrix * mtxC, int place 
     place[0] += 1;
 }
 
-void finish(int hasData, int trash [], int tagFinilize, MPI_Request req []) {
+void finish(int hasData, int trash [], int tagFinilize, int nprocs, MPI_Request req []) {
     // Send termination message to all processes
     int i = 0, mpi_error;
-    while (i < hasData ) {
-        mpi_error = MPI_Isend(trash, 1, MPI_INT, IHasData[i], tagFinilize, MPI_COMM_WORLD, req + i);
+    while (i < nprocs ) {
+        mpi_error = MPI_Isend(trash, 1, MPI_INT, i, tagFinilize, MPI_COMM_WORLD, req + i);
     }
     
     // Wait for all messages to go through to avoid seg fault
@@ -244,11 +244,11 @@ void finish(int hasData, int trash [], int tagFinilize, MPI_Request req []) {
     
 }
 
-void handleMasterFinishShort(int hasData, int trash [], int tagFinilize, MPI_Request req []) {
-    finish(hasData, trash, tagFinilize, req);
+void handleMasterFinishShort(int hasData, int trash [], int tagFinilize, int nprocs, MPI_Request req []) {
+    finish(hasData, trash, tagFinilize, nprocs, req);
 }
 
-void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [], int hasDataint tagC, int tagFinilize, \
+void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [], int hasData, int tagC, int tagFinilize, int nprocs,
                             MPI_Status status, MPI_Request req []) {
     int IHasData [hasData], mpi_error, i;
     
@@ -269,7 +269,7 @@ void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [
         //Wait for Data to go in
         MPI_Wait(req, MPI_STATUS_IGNORE);
     }
-    finish(hasData, trash, tagFinilize, req);
+    finish(hasData, trash, tagFinilize, nprocs, req);
 }
 
 
