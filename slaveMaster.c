@@ -14,7 +14,7 @@
 
 // Master Logic
 void handleMasterInit(matrix * mtxA, int * trash, int place [], MPI_Status status, MPI_Request req []);
-void handleMasterBody(matrix * mtxC, int place [], int load, int tagA, int n, MPI_Status status, MPI_Request req [])
+void handleMasterBody(matrix * mtxC, int place [], int load, int tagA, int n, MPI_Status status, MPI_Request req []);
 void handleMasterCompute(matrix * mtxA, matrix * mtxB, matrix * mtxC, int place []);
 void handleMasterFinishShort(int hasData, int trash [], int IHasData[], int tagFinilize, MPI_Request req);
 void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash, int place [], int hasData, int tagC, int tagFinilize, \
@@ -184,7 +184,7 @@ int main(int argc, char * argv[]) {
  */
 
 void handleMasterInit(matrix * mtxA, int * trash, int place [], MPI_Status status, MPI_Request req []) {
-    
+    int mpi_error;
     printf("SERVER: Initilize Message from Process %d \n",status.MPI_SOURCE);
     mpi_error = MPI_Irecv(trash, 1, MPI_INT, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, req + status.MPI_SOURCE);
     
@@ -232,7 +232,7 @@ void handleMasterCompute(matrix * mtxA, matrix * mtxB, matrix * mtxC, int place 
 
 void finish(int hasData, int trash [], int IHasData[], int tagFinilize, MPI_Request req) {
     // Send termination message to all processes
-    int i = 0;
+    int i = 0, mpi_error;
     while (i < hasData ) {
         mpi_error = MPI_Isend(trash, 1, MPI_INT, IHasData[i], tagFinilize, MPI_COMM_WORLD, req + i);
     }
@@ -249,7 +249,7 @@ void handleMasterFinishShort(int hasData, int trash [], int IHasData[], int tagF
 
 void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash, int place [], int hasData, int tagC, int tagFinilize, \
                             MPI_Status status, MPI_Request req []) {
-    int IHasData [hasData];
+    int IHasData [hasData], mpi_error;
     
     for (i = 1; i < nprocs; i++) {
         if (place[i] != 0) {
