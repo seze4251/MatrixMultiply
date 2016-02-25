@@ -17,9 +17,10 @@ void handleMasterInit(matrix * mtxA, int * trash, int place [], int load, int m,
 void handleMasterBody(matrix * mtxA, matrix * mtxC, int place [], int load, int m, int tagA, int n, MPI_Status status, MPI_Request req []);
 void handleMasterCompute(matrix * mtxA, matrix * mtxB, matrix * mtxC, int place []);
 void handleMasterFinishShort(int hasData, int trash [], int tagFinilize, MPI_Request req []);
-void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [], int hasData, int tagC, int tagFinilize, \
+void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [], int hasDataint tagC, int tagFinilize, \
                             MPI_Status status, MPI_Request req []);
-void finish(int hasData, int trash [], int IHasData[], int tagFinilize, MPI_Request req []);
+
+void finish(int hasData, int trash [], int tagFinilize, MPI_Request req []);
 // Slave Logic
 void handleSlaveInit(int * trash, int serverRank, int tagInit, int myrank, MPI_Request req []) ;
 void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank, int tagA, int tagC, int m, int myrank, MPI_Request req[], MPI_Status status);
@@ -247,9 +248,9 @@ void handleMasterFinishShort(int hasData, int trash [], int tagFinilize, MPI_Req
     finish(hasData, trash, tagFinilize, req);
 }
 
-void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [], int tagC, int tagFinilize, \
+void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [], int hasDataint tagC, int tagFinilize, \
                             MPI_Status status, MPI_Request req []) {
-    int IHasData [hasData], mpi_error;
+    int IHasData [hasData], mpi_error, i;
     
     for (i = 1; i < nprocs; i++) {
         if (place[i] != 0) {
@@ -280,7 +281,7 @@ void handleSlaveInit(int * trash, int serverRank, int tagInit, int myrank, MPI_R
     printf("Rank %d: Finish Initialize \n", myrank);
 }
 
-void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank, int tagA, int tagc, int m, int myrank, MPI_Request req[], MPI_Status status) {
+void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank, int tagA, int tagC, int m, int myrank, MPI_Request req[], MPI_Status status) {
     int count, mpi_error;
     mpi_error = MPI_Get_count( &status, MPI_DOUBLE, &count);
     
@@ -304,7 +305,7 @@ void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank
 }
 
 
-void handleSlaveFinish(int * trash, int serverRank, int tagFinilize, myrank, MPI_Request req []) {
+void handleSlaveFinish(int * trash, int serverRank, int tagFinilize, int myrank, MPI_Request req []) {
     int mpi_error;
     mpi_error = MPI_Irecv(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, req);
     MPI_Wait(req, MPI_STATUS_IGNORE);
