@@ -16,10 +16,10 @@
 void handleMasterInit(matrix * mtxA, int * trash, int place [], MPI_Status status, MPI_Request req []);
 void handleMasterBody(matrix * mtxC, int place [], int load, int tagA, int n, MPI_Status status, MPI_Request req []);
 void handleMasterCompute(matrix * mtxA, matrix * mtxB, matrix * mtxC, int place []);
-void handleMasterFinishShort(int hasData, int trash [], int IHasData[], int tagFinilize, MPI_Request req);
-void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash, int place [], int hasData, int tagC, int tagFinilize, \
+void handleMasterFinishShort(int hasData, int trash [], int IHasData[], int tagFinilize, MPI_Request req []);
+void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [], int hasData, int tagC, int tagFinilize, \
                             MPI_Status status, MPI_Request req []);
-void finish(int hasData, int trash [], int IHasData[], int tagFinilize, MPI_Request req);
+void finish(int hasData, int trash [], int IHasData[], int tagFinilize, MPI_Request req []);
 // Slave Logic
 void handleSlaveInit(int * trash, int serverRank, int tagInit, MPI_Request req []) ;
 void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int ServerRank, int tagA, int m, MPI_Request req[], MPI_Status status);
@@ -105,10 +105,10 @@ int main(int argc, char * argv[]) {
                 //   printf("Server: Recv Message from rank %d", status.MPI_SOURCE);
                 if (flag == 1) {
                     if (status.MPI_TAG == tagInit ) {
-                        handleMasterInit();
+                        handleMasterInit(mtxA, trash, place, status, req);
                         
                     } else if ( status.MPI_TAG == tagC ) {
-                        handleMasterBody();
+                        handleMasterBody(mtxC, place, load, tagA, n, status, req);
                         
                     } else {
                         // Some other tag that we are not expecting: Log Error
@@ -117,7 +117,7 @@ int main(int argc, char * argv[]) {
                     
                 } else if( flag == 0) {
                     // Compute rows of A and check back for more data
-                    handleMasterCompute(mtxA, mtxB, mtxC, place []);
+                    handleMasterCompute(mtxA, mtxB, mtxC, place);
                 }
             } else {
                 // Master End condition
@@ -131,11 +131,11 @@ int main(int argc, char * argv[]) {
                 
                 if (!hasData) {
                     // Case 1: Master did all the work (small matrix)
-                    handleMasterFinishShort();
+                    handleMasterFinishShort(hasData, trash, IHasData, tagFinilize, req);
                     break;
                 } else {
                     // Case 2: Others Have data
-                    handleMasterFinishLong();
+                    handleMasterFinishLong(mtxC, nprocs, trash, place, hasData, tagC, tagFinilize, status, req);
                     break;
                 }
             }
@@ -230,7 +230,7 @@ void handleMasterCompute(matrix * mtxA, matrix * mtxB, matrix * mtxC, int place 
     place[0] += 1;
 }
 
-void finish(int hasData, int trash [], int IHasData[], int tagFinilize, MPI_Request req) {
+void finish(int hasData, int trash [], int IHasData[], int tagFinilize, MPI_Request req []) {
     // Send termination message to all processes
     int i = 0, mpi_error;
     while (i < hasData ) {
@@ -243,11 +243,11 @@ void finish(int hasData, int trash [], int IHasData[], int tagFinilize, MPI_Requ
     
 }
 
-void handleMasterFinishShort(int hasData, int trash [], int IHasData[], int tagFinilize, MPI_Request req) {
+void handleMasterFinishShort(int hasData, int trash [], int IHasData[], int tagFinilize, MPI_Request req []) {
     finish(hasData, trash, IHasData[], tagFinilize, req);
 }
 
-void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash, int place [], int hasData, int tagC, int tagFinilize, \
+void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [], int hasData, int tagC, int tagFinilize, \
                             MPI_Status status, MPI_Request req []) {
     int IHasData [hasData], mpi_error;
     
