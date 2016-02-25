@@ -291,7 +291,7 @@ void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int ServerRank
     mtxA -> rows = rows;
     mtxC -> rows = rows;
     
-    MPI_Wait(reqF, MPI_STATUS_IGNORE);
+    MPI_Wait(req, MPI_STATUS_IGNORE);
     printf("Rank %d: Print Matrix A\n",myrank);
     printMatrix(mtxA);
     // Compute Product
