@@ -343,11 +343,11 @@ void handleServerFinish(matrix * mtxA, matrix * mtxB, matrix * mtxC, int n, int 
     printf("Completed Test Multiplication \n");
     
     // Test Correctness  DEBUG
-    /*printf("Matrix Test: \n");
+     printf("Matrix Test: \n");
      printMatrix(mtxTest);
      printf("Matrix C: \n");
      printMatrix(mtxC);
-     */
+     
     
     if (subtractMatrix(mtxC, mtxTest)) {
         printf("\n Matrix Product Cache Obliv incorrect \n");
