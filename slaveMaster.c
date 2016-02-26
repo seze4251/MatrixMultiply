@@ -259,7 +259,7 @@ void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [
     
     for (i = 1; i < nprocs; i++) {
         if (place[i] != 0) {
-            IHasData[i] += i;
+            IHasData[i] = i;
             printf("IHASDATA: %d, i = %d\n",IHasData[i],i);
         }
     }
