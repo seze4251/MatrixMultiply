@@ -65,7 +65,7 @@ int main(int argc, char * argv[]) {
         mtxA = newMatrix(n, m);
         mtxC = newMatrix(n, p);
         constMatrix(mtxA, 2);
-        constMatrix(mtxA, 3);
+        constMatrix(mtxB, 3);
         //randomizeMatrix(mtxA);
         //randomizeMatrix(mtxB);
         starttime = MPI_Wtime();
