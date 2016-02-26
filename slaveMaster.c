@@ -47,16 +47,17 @@ int main(int argc, char * argv[]) {
         while (1) {
             printf("Please enter 3 ints to dimensionlize the Matrix followed by a int for load distribution (4 total) \n");
             int check = scanf("%d %d %d %d",&n, &m, &p, &load);
-            if (n > 0 && m > 0 && p > 0) {
+            if (n > 0 && m > 0 && p > 0 && load > 0 && load <= n) {
                 break;
             } else {
                 printf("Please Enter Three Numbers that Are greater than 0 \n");
             }
         }
-        buff[0] = n; buff[1] = m; buff[2] = p; load = buff[4];
+        printf("SERVER: load 1 = %d", load);
+        buff[0] = n; buff[1] = m; buff[2] = p; buff[3] = load;
     }
     mpi_error = MPI_Bcast(buff, 4, MPI_INT, serverRank, MPI_COMM_WORLD); // MPI Bcast blocks until Everyone is here
-    n = buff[0]; m = buff[1]; p = buff[2]; load = buff[4];
+    n = buff[0]; m = buff[1]; p = buff[2]; load = buff[3];
     matrix * mtxA, * mtxC;
     matrix * mtxB = newMatrix(m, p);
     
