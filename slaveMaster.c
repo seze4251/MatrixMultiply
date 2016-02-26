@@ -237,6 +237,7 @@ void handleMasterCompute(matrix * mtxA, matrix * mtxB, matrix * mtxC, int place 
 
 void finish(int trash [], int tagFinilize, int nprocs, MPI_Request req []) {
     // Send termination message to all processes
+    printf("SERVER: ENTER FINISH LOOP!!!! \n");
     int i = 0, mpi_error;
     while (i < nprocs ) {
         mpi_error = MPI_Isend(trash, 1, MPI_INT, i, tagFinilize, MPI_COMM_WORLD, req + i);
@@ -277,6 +278,7 @@ void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [
         MPI_Wait(req, MPI_STATUS_IGNORE);
         i++;
     }
+    printf("MASTER FINISHED RECIVE LOOP \n");
     finish(trash, tagFinilize, nprocs, req);
 }
 
