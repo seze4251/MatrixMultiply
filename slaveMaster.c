@@ -302,7 +302,8 @@ void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank
     
     // Recive matrix A
     mpi_error = MPI_Irecv(mtxA -> data[0], count, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, req);
-    
+    // Found Error!!
+    zeroMatrix(mtxC);
     printf("SLAVE: %d, count = %d, m = %d count/m\n",myrank,count,m);
     int rows = count / m;
     mtxA -> rows = rows;
