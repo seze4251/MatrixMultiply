@@ -53,7 +53,7 @@ int main(int argc, char * argv[]) {
                 printf("Please Enter Three Numbers that Are greater than 0 \n");
             }
         }
-        printf("SERVER: load 1 = %d", load);
+        //printf("SERVER: load 1 = %d", load);
         buff[0] = n; buff[1] = m; buff[2] = p; buff[3] = load;
     }
     mpi_error = MPI_Bcast(buff, 4, MPI_INT, serverRank, MPI_COMM_WORLD); // MPI Bcast blocks until Everyone is here
@@ -339,7 +339,7 @@ void handleServerFinish(matrix * mtxA, matrix * mtxB, matrix * mtxC, int n, int 
     //Time
     endtime = MPI_Wtime();
     totaltime = endtime - starttime;
-    printf("Total Running Time: %5.3f",totaltime);
+    printf("Total Running Time: %5.3f\n",totaltime);
     
     // Print to File
     /*FILE * file = fopen("OutputParallel","a");
