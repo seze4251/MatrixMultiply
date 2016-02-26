@@ -70,8 +70,8 @@ int main(int argc, char * argv[]) {
         //randomizeMatrix(mtxB);
         starttime = MPI_Wtime();
     } else {
-        mtxA = newMatrix(2 * load, m);
-        mtxC = newMatrix(2 * load, p);
+        mtxA = newMatrix(4 * load, m);
+        mtxC = newMatrix(4 * load, p);
     }
     
     
@@ -215,6 +215,7 @@ void handleMasterBody(matrix * mtxA, matrix * mtxC, int place [], int load, int 
     mpi_error = MPI_Irecv(mtxC -> data[place[status.MPI_SOURCE]], count, MPI_DOUBLE, status.MPI_SOURCE,
                           status.MPI_TAG, MPI_COMM_WORLD, req + status.MPI_SOURCE);
     
+    // Source of Error?
     if (place[0] + load >= n) {
         load = n - place[0];
     }
@@ -305,6 +306,7 @@ void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank
     int rows = count / m;
     mtxA -> rows = rows;
     mtxC -> rows = rows;
+    printf("Slave: %d, rows of A: %d \n",myrank, rows);
     
     MPI_Wait(req, MPI_STATUS_IGNORE);
 
