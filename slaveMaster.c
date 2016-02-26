@@ -160,13 +160,14 @@ int main(int argc, char * argv[]) {
                 handleSlaveBody(mtxA, mtxB, mtxC, serverRank, tagA, tagC, m, myrank, req, status); //Decide what to do with Request
                 
             } else if (status.MPI_TAG == tagFinilize) {
+                printf("Slave: %d Enetering Finish Manuever\n");
                 handleSlaveFinish(trash, serverRank, tagFinilize, myrank, req); // Decide what to do with this shit!
                 break;
             }
         }
     }
     
-    
+    printf("I rank %d made it out of the infinite loop\n");
     if (myrank == serverRank) {
         handleServerFinish(mtxA, mtxB, mtxC, n, p, starttime, endtime, totaltime);
     }
