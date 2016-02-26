@@ -205,7 +205,7 @@ void handleMasterInit(matrix * mtxA, int * trash, int place [], int load, int m,
 }
 
 void handleMasterBody(matrix * mtxA, matrix * mtxC, int place [], int load, int m, int tagA, int n, MPI_Status status, MPI_Request req []) {
-    printf("SERVER: Data message from Process %d \n", status.MPI_SOURCE);
+    printf("SERVER: Data message recived from Process %d \n", status.MPI_SOURCE);
     int count, mpi_error;
     mpi_error = MPI_Get_count(&status, MPI_DOUBLE, &count);
     
@@ -255,10 +255,12 @@ void handleMasterFinishShort(int trash [], int tagFinilize, int nprocs, MPI_Requ
 void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [], int hasData, int tagC, int tagFinilize,
                             MPI_Status status, MPI_Request req []) {
     int IHasData [hasData], mpi_error, i;
+    printf("HasData %d \n",hasData);
     
     for (i = 1; i < nprocs; i++) {
         if (place[i] != 0) {
             IHasData[i] += i;
+            printf("IHASDATA: %d, i = %d\n",IhasData[i],i);
         }
     }
     
