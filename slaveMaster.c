@@ -313,7 +313,7 @@ void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank
 
 
 void handleSlaveFinish(int * trash, int serverRank, int tagFinilize, int myrank, MPI_Request req []) {
-    printf("SLAVE: %d,  Started Slave Finish\n" myrank);
+    printf("SLAVE: %d,  Started Slave Finish\n", myrank);
     int mpi_error;
     mpi_error = MPI_Irecv(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, req);
     MPI_Wait(req, MPI_STATUS_IGNORE);
