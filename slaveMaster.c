@@ -265,6 +265,7 @@ void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [
     }
     
     i = 0;
+    printf("Master Entering Recive Data Loop \n");
     while (i < hasData ) {
         MPI_Probe(MPI_ANY_SOURCE, tagC, MPI_COMM_WORLD, & status);
         int count, mpi_error;
@@ -274,6 +275,7 @@ void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [
                               tagC, MPI_COMM_WORLD, req);
         //Wait for Data to go in
         MPI_Wait(req, MPI_STATUS_IGNORE);
+        i++;
     }
     finish(trash, tagFinilize, nprocs, req);
 }
@@ -299,8 +301,7 @@ void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank
     mtxC -> rows = rows;
     
     MPI_Wait(req, MPI_STATUS_IGNORE);
-    printf("Rank %d: Print Matrix A\n",myrank);
-    //printMatrix(mtxA);
+
     // Compute Product
     int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
     
@@ -312,6 +313,7 @@ void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank
 
 
 void handleSlaveFinish(int * trash, int serverRank, int tagFinilize, int myrank, MPI_Request req []) {
+    printf("SLAVE: %d,  Started Slave Finish\n" myrank);
     int mpi_error;
     mpi_error = MPI_Irecv(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, req);
     MPI_Wait(req, MPI_STATUS_IGNORE);
