@@ -190,7 +190,7 @@ void handleMasterInit(matrix * mtxA, int * trash, int place [], int load, int m,
     printf("SERVER: load = %d, m = %d \n", load, m);
     mpi_error = MPI_Isend(mtxA -> data[place[0]], load*m, MPI_DOUBLE, status.MPI_SOURCE, tagA, MPI_COMM_WORLD, \
                           req );
-    printf("SERVER: FINISHED SEND Init\n ")
+    printf("SERVER: FINISHED SEND Init\n ");
     place[status.MPI_SOURCE] = place[0];
     place[0] += load;
     
