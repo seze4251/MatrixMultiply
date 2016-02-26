@@ -300,7 +300,7 @@ void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank
     
     MPI_Wait(req, MPI_STATUS_IGNORE);
     printf("Rank %d: Print Matrix A\n",myrank);
-    printMatrix(mtxA);
+    //printMatrix(mtxA);
     // Compute Product
     int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
     
