@@ -153,10 +153,10 @@ int main(int argc, char * argv[]) {
             
             printf("Slave: %d made it to probe \n",myrank);
             MPI_Probe(serverRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status); //Blocking probe to not waste CPU time
-            printf("Rank %d: Finsihed Probe\n", myrank);
+            printf("Slave: %d Finsihed Probe\n", myrank);
             
             if (status.MPI_TAG == tagA) {
-                printf("Rank %d: Recive Data\n",myrank);
+                printf("Slave: %d Recive Data\n",myrank);
                 handleSlaveBody(mtxA, mtxB, mtxC, serverRank, tagA, tagC, m, myrank, req, status); //Decide what to do with Request
                 
             } else if (status.MPI_TAG == tagFinilize) {
@@ -239,14 +239,15 @@ void handleMasterCompute(matrix * mtxA, matrix * mtxB, matrix * mtxC, int place 
 void finish(int trash [], int tagFinilize, int nprocs, MPI_Request req []) {
     // Send termination message to all processes
     printf("SERVER: ENTER FINISH LOOP!!!! \n");
-    int i = 0, mpi_error;
-    while (i < nprocs ) {
+    int i, mpi_error;
+    for (i = 1; i < nprocs; i++) {
         mpi_error = MPI_Isend(trash, 1, MPI_INT, i, tagFinilize, MPI_COMM_WORLD, req + i);
     }
     
-    // Wait for all messages to go through to avoid seg fault
-    MPI_Waitall(nprocs, req, MPI_STATUS_IGNORE);
     
+    // Wait for all messages to go through to avoid seg fault
+    MPI_Waitall(nprocs -1, req + 1, MPI_STATUS_IGNORE);
+    printf("SERVER: MADE IT PAST FINAL WAIT ALL");
     
 }
 
