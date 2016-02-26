@@ -234,10 +234,10 @@ void handleMasterBody(matrix * mtxA, matrix * mtxC, int place [], int load, int 
 }
 
 void handleMasterCompute(matrix * mtxA, matrix * mtxB, matrix * mtxC, int place []) {
-    printf("SERVER: Compute: row = %d\n",place[0]);
+ /*   printf("SERVER: Compute: row = %d\n",place[0]);
     int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, place[0], place[0] + 1, 0, mtxA->cols, 0, mtxB->cols);
     place[0] += 1;
-}
+*/}
 
 void finish(int trash [], int tagFinilize, int nprocs, MPI_Request req []) {
     // Send termination message to all processes
