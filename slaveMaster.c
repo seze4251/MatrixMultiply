@@ -94,6 +94,7 @@ int main(int argc, char * argv[]) {
     // Get matrix B B
     if (myrank != serverRank) {
         MPI_Wait(req, MPI_STATUS_IGNORE);
+        printf("Slave: %d made it past recive of B\n", myrank);
     }
     
     while (1) {
@@ -145,9 +146,12 @@ int main(int argc, char * argv[]) {
             if (i == 0) {
                 //Initialize Slave
                 i = 1;
+                
                 handleSlaveInit(trash, serverRank, tagInit, myrank, req);
+                printf("Slave: %d made it Past Init \n", myrank);
             }
             
+            printf("Slave: %d made it to probe \n",myrank);
             MPI_Probe(serverRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status); //Blocking probe to not waste CPU time
             printf("Rank %d: Finsihed Probe\n", myrank);
             
