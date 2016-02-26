@@ -312,8 +312,10 @@ void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank
     int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
     
     // Send Back
+    /*
     printf("Slave: %d  rows: %d, cols: %d, MTXC \n",myrank, mtxC  -> rows, mtxC -> cols);
     printMatrix(mtxC);
+    */
     
     mpi_error = MPI_Isend(mtxC -> data[0], count, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req);
     MPI_Wait(req, MPI_STATUS_IGNORE);
@@ -348,11 +350,11 @@ void handleServerFinish(matrix * mtxA, matrix * mtxB, matrix * mtxC, int n, int 
     printf("Completed Test Multiplication \n");
     
     // Test Correctness  DEBUG
-     printf("Matrix Test: \n");
+    /* printf("Matrix Test: \n");
      printMatrix(mtxTest);
      printf("Matrix C: \n");
      printMatrix(mtxC);
-     
+     */
     
     if (subtractMatrix(mtxC, mtxTest)) {
         printf("\n Matrix Product Cache Obliv incorrect \n");
