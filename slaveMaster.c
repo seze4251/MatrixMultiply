@@ -96,7 +96,7 @@ int main(int argc, char * argv[]) {
     // Get matrix B B
     if (myrank != serverRank) {
         MPI_Wait(req, MPI_STATUS_IGNORE);
-        printf("Slave: %d made it past recive of B\n", myrank);
+       // printf("Slave: %d made it past recive of B\n", myrank);
     }
     
     while (1) {
@@ -104,7 +104,7 @@ int main(int argc, char * argv[]) {
             if (place[0] != n) {
                 //Master
                 MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, & flag, & status);
-                printf("SERVER: Flag Value =  %d \n", flag);
+              //  printf("SERVER: Flag Value =  %d \n", flag);
                 
                 //   printf("Server: Recv Message from rank %d", status.MPI_SOURCE);
                 if (flag == 1) {
@@ -150,19 +150,19 @@ int main(int argc, char * argv[]) {
                 i = 1;
                 
                 handleSlaveInit(trash, serverRank, tagInit, myrank, req);
-                printf("Slave: %d made it Past Init \n", myrank);
+                //printf("Slave: %d made it Past Init \n", myrank);
             }
             
-            printf("Slave: %d made it to probe \n",myrank);
+          //  printf("Slave: %d made it to probe \n",myrank);
             MPI_Probe(serverRank, MPI_ANY_TAG, MPI_COMM_WORLD, &status); //Blocking probe to not waste CPU time
-            printf("Slave: %d Finsihed Probe\n", myrank);
+            //printf("Slave: %d Finsihed Probe\n", myrank);
             
             if (status.MPI_TAG == tagA) {
-                printf("Slave: %d Recive Data\n",myrank);
+                //printf("Slave: %d Recive Data\n",myrank);
                 handleSlaveBody(mtxA, mtxB, mtxC, serverRank, tagA, tagC, m, myrank, req, status); //Decide what to do with Request
                 
             } else if (status.MPI_TAG == tagFinilize) {
-                printf("Slave: %d Enetering Finish Manuever\n", myrank);
+                //printf("Slave: %d Enetering Finish Manuever\n", myrank);
                 handleSlaveFinish(trash, serverRank, tagFinilize, myrank, req); // Decide what to do with this shit!
                 break;
             }
@@ -176,11 +176,11 @@ int main(int argc, char * argv[]) {
     
     // Release Heap Memory and Terminate MPI
     deleteMatrix(mtxA);
-    printf("Deleted Test Matrix A rank: %d\n",myrank);
+   // printf("Deleted Test Matrix A rank: %d\n",myrank);
     deleteMatrix(mtxB);
-    printf("Deleted Test Matrix B rank: %d\n",myrank);
+    //printf("Deleted Test Matrix B rank: %d\n",myrank);
     deleteMatrix(mtxC);
-    printf("Deleted Matrix C rank: %d\n", myrank);
+  //  printf("Deleted Matrix C rank: %d\n", myrank);
     MPI_Finalize();
     printf("Closed MPI rank: %d\n", myrank);
     return 0;
@@ -195,20 +195,20 @@ void handleMasterInit(matrix * mtxA, int * trash, int place [], int load, int m,
     int mpi_error;
     printf("SERVER: Initilize Message from Process %d \n",status.MPI_SOURCE);
     mpi_error = MPI_Irecv(trash, 1, MPI_INT, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, req + status.MPI_SOURCE);
-    printf("SERVER: load = %d, m = %d \n", load, m);
+   // printf("SERVER: load = %d, m = %d \n", load, m);
     mpi_error = MPI_Isend(mtxA -> data[place[0]], load*m, MPI_DOUBLE, status.MPI_SOURCE, tagA, MPI_COMM_WORLD, \
                           req );
-    printf("SERVER: FINISHED SEND Init\n ");
+   // printf("SERVER: FINISHED SEND Init\n ");
     place[status.MPI_SOURCE] = place[0];
     place[0] += load;
     
     //Free Request arrive Request
     MPI_Request_free(req + status.MPI_SOURCE);
-    printf("Server: Made it past Free\n");
+    //printf("Server: Made it past Free\n");
 }
 
 void handleMasterBody(matrix * mtxA, matrix * mtxC, int place [], int load, int m, int tagA, int n, MPI_Status status, MPI_Request req []) {
-    printf("SERVER: Data message recived from Process %d \n", status.MPI_SOURCE);
+  //  printf("SERVER: Data message recived from Process %d \n", status.MPI_SOURCE);
     int count, mpi_error;
     mpi_error = MPI_Get_count(&status, MPI_DOUBLE, &count);
     
@@ -241,7 +241,7 @@ void handleMasterCompute(matrix * mtxA, matrix * mtxB, matrix * mtxC, int place 
 
 void finish(int trash [], int tagFinilize, int nprocs, MPI_Request req []) {
     // Send termination message to all processes
-    printf("SERVER: ENTER FINISH LOOP!!!! \n");
+    //printf("SERVER: ENTER FINISH LOOP!!!! \n");
     int i, mpi_error;
     for (i = 1; i < nprocs; i++) {
         mpi_error = MPI_Isend(trash, 1, MPI_INT, i, tagFinilize, MPI_COMM_WORLD, req + i);
@@ -250,7 +250,7 @@ void finish(int trash [], int tagFinilize, int nprocs, MPI_Request req []) {
     
     // Wait for all messages to go through to avoid seg fault
     MPI_Waitall(nprocs -1, req + 1, MPI_STATUS_IGNORE);
-    printf("SERVER: MADE IT PAST !FINAL! WAIT ALL");
+   // printf("SERVER: MADE IT PAST !FINAL! WAIT ALL");
     
 }
 
@@ -271,7 +271,7 @@ void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [
     }
     
     i = 0;
-    printf("Master Entering Recive Data Loop \n");
+    //printf("Master Entering Recive Data Loop \n");
     while (i < hasData ) {
         MPI_Probe(MPI_ANY_SOURCE, tagC, MPI_COMM_WORLD, & status);
         int count, mpi_error;
@@ -283,17 +283,17 @@ void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [
         MPI_Wait(req, MPI_STATUS_IGNORE);
         i++;
     }
-    printf("MASTER FINISHED RECIVE LOOP \n");
+    //printf("MASTER FINISHED RECIVE LOOP \n");
     finish(trash, tagFinilize, nprocs, req);
 }
 
 
 
 void handleSlaveInit(int * trash, int serverRank, int tagInit, int myrank, MPI_Request req []) {
-    printf("Rank %d: Send Initialize\n",myrank);
+    //printf("Rank %d: Send Initialize\n",myrank);
     int mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagInit, MPI_COMM_WORLD, req);
     MPI_Wait(req, MPI_STATUS_IGNORE);
-    printf("Rank %d: Finish Initialize \n", myrank);
+    //printf("Rank %d: Finish Initialize \n", myrank);
 }
 
 void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank, int tagA, int tagC, int m, int myrank, MPI_Request req[], MPI_Status status) {
@@ -304,11 +304,11 @@ void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank
     mpi_error = MPI_Irecv(mtxA -> data[0], count, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, req);
     // Found Error!!
     zeroMatrix(mtxC);
-    printf("SLAVE: %d, count = %d, m = %d count/m\n",myrank,count,m);
+    //printf("SLAVE: %d, count = %d, m = %d count/m\n",myrank,count,m);
     int rows = count / m;
     mtxA -> rows = rows;
     mtxC -> rows = rows;
-    printf("Slave: %d, rows of A: %d \n",myrank, rows);
+   // printf("Slave: %d, rows of A: %d \n",myrank, rows);
     
     MPI_Wait(req, MPI_STATUS_IGNORE);
 
@@ -328,11 +328,11 @@ void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank
 
 
 void handleSlaveFinish(int * trash, int serverRank, int tagFinilize, int myrank, MPI_Request req []) {
-    printf("SLAVE: %d,  Started Slave Finish\n", myrank);
+    //printf("SLAVE: %d,  Started Slave Finish\n", myrank);
     int mpi_error;
     mpi_error = MPI_Irecv(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, req);
     MPI_Wait(req, MPI_STATUS_IGNORE);
-    printf("Rank %d: Finilize recived, Exiting MPI \n", myrank);
+  //  printf("Rank %d: Finilize recived, Exiting MPI \n", myrank);
 }
 
 void handleServerFinish(matrix * mtxA, matrix * mtxB, matrix * mtxC, int n, int p, double starttime, double endtime, double totaltime) {
@@ -348,7 +348,7 @@ void handleServerFinish(matrix * mtxA, matrix * mtxB, matrix * mtxC, int n, int 
      */
     
     matrix * mtxTest = newMatrix(n, p);
-    printf("Created Test Matrix\n");
+    //printf("Created Test Matrix\n");
     
     matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
     printf("Completed Test Multiplication \n");
