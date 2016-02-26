@@ -250,7 +250,7 @@ void finish(int trash [], int tagFinilize, int nprocs, MPI_Request req []) {
     
     // Wait for all messages to go through to avoid seg fault
     MPI_Waitall(nprocs -1, req + 1, MPI_STATUS_IGNORE);
-    printf("SERVER: MADE IT PAST FINAL WAIT ALL");
+    printf("SERVER: MADE IT PAST !FINAL! WAIT ALL");
     
 }
 
@@ -261,12 +261,12 @@ void handleMasterFinishShort(int trash [], int tagFinilize, int nprocs, MPI_Requ
 void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place [], int hasData, int tagC, int tagFinilize,
                             MPI_Status status, MPI_Request req []) {
     int IHasData [hasData], mpi_error, i;
-    printf("HasData %d \n",hasData);
+   // printf("HasData %d \n",hasData);
     
     for (i = 1; i < nprocs; i++) {
         if (place[i] != 0) {
             IHasData[i] = i;
-            printf("IHASDATA: %d, i = %d\n",IHasData[i],i);
+     //       printf("IHASDATA: %d, i = %d\n",IHasData[i],i);
         }
     }
     
@@ -303,6 +303,7 @@ void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank
     // Recive matrix A
     mpi_error = MPI_Irecv(mtxA -> data[0], count, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, req);
     
+    printf("SLAVE: %d, count = %d, m = %d count/m\n",myrank,count,m);
     int rows = count / m;
     mtxA -> rows = rows;
     mtxC -> rows = rows;
