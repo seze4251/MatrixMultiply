@@ -319,7 +319,7 @@ void handleSlaveBody(matrix * mtxA, matrix * mtxB, matrix * mtxC, int serverRank
     printMatrix(mtxC);
     */
     
-    mpi_error = MPI_Isend(mtxC -> data[0], count, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req);
+    mpi_error = MPI_Isend(mtxC -> data[0], mtxC -> rows * mtxC -> cols, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req);
     MPI_Wait(req, MPI_STATUS_IGNORE);
     
 }
