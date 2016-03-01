@@ -2,7 +2,7 @@
 
 .PHONY: clean
 CC = mpicc
-OBJS = slaveMaster2.o matrixFix.o messagePasser.o
+OBJS = slaveMaster2.o matrixFix.o 
 
 slaveMast: $(OBJS)
 	$(CC) -Wall -o $@ $^
@@ -10,7 +10,7 @@ slaveMast: $(OBJS)
 $(OBJS): %.o: %.c
 	$(CC) -c $<
 
-slaveMaster2.o: matrixFix.h messagePasser.h
+slaveMaster2.o: matrixFix.h
 
 matrixFix.o: matrixFix.h
 
