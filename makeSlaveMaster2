@@ -4,7 +4,7 @@
 CC = mpicc
 OBJS = slaveMaster2.o matrixFix.o 
 
-slaveMast: $(OBJS)
+slaveMast2: $(OBJS)
 	$(CC) -Wall -o $@ $^
 
 $(OBJS): %.o: %.c

@@ -64,10 +64,10 @@ int main(int argc, char * argv[]) {
     if (myrank == serverRank) {
         mtxA = newMatrix(n, m);
         mtxC = newMatrix(n, p);
-        constMatrix(mtxA, 2);
-        constMatrix(mtxB, 3);
-        //randomizeMatrix(mtxA);
-        //randomizeMatrix(mtxB);
+       // constMatrix(mtxA, 2);
+       // constMatrix(mtxB, 3);
+        randomizeMatrix(mtxA);
+        randomizeMatrix(mtxB);
         starttime = MPI_Wtime();
     } else {
         mtxA = newMatrix(4 * load, m);
