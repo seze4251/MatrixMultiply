@@ -259,8 +259,8 @@ void handleMasterBody(matrix * mtxC, int place[][2], MPI_Status status) {
     holder = findPlace(place, status.MPI_SOURCE);
     
     // Blocking Recv
-    mpi_error = MPI_Recv(mtxC -> data[*holder], count, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, status);
-
+    mpi_error = MPI_Recv(mtxC -> data[*holder], count, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status);
+    
     //Everytime cont is receved set it equal to 0
     * holder = 0;
     
@@ -345,7 +345,7 @@ void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place[]
         mpi_error = MPI_Get_count(&status, MPI_DOUBLE, &count);
         
         //Blocking Recv
-        mpi_error = MPI_Recv(mtxC -> data[*holder], count, MPI_DOUBLE, status.MPI_SOURCE, tagC, MPI_COMM_WORLD);
+        mpi_error = MPI_Recv(mtxC -> data[*holder], count, MPI_DOUBLE, status.MPI_SOURCE, tagC, MPI_COMM_WORLD, & status);
     }
     
     //printf("MASTER FINISHED RECIVE LOOP \n");
@@ -364,7 +364,7 @@ void handleSlaveInit(matrix * mtxA, matrix * mtxC, int m, int * trash, int serve
     mpi_error = MPI_Get_count(&status, MPI_DOUBLE, & count);
     
     //Blocking Recv
-    mpi_error = MPI_Recv(mtxA -> data[0], count, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, status);
+    mpi_error = MPI_Recv(mtxA -> data[0], count, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, & status);
     
     //Assign Matrix Proper Dimensions
     int rows = count / m;
@@ -433,29 +433,44 @@ void handleSlaveBody(matrix * mtxA_one, matrix * mtxA_two, matrix * mtxB, matrix
             
             
         } else {
-            //Blocking Probe
+            //Blocking Probe -- Need not to touch (status + 0)
             MPI_Probe(serverRank, MPI_ANY_TAG, MPI_COMM_WORLD, & flag, status);
             
             if (status[0].MPI_TAG == tagA) {
                 mpi_error = MPI_Get_count(status, MPI_DOUBLE, &count);
                 // Blocking Recv
-                mpi_error = MPI_Recv(mtxA_two -> data[0], count, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, status);
+                mpi_error = MPI_Recv(mtxA_two -> data[0], count, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, status + 1);
             } else if(status[0].MPI_TAG == tagFinilize) {
+                //Finishing Cases for slaves:
+                // Normal - have a finishing message with no A waiting
+                // Bad - Have a finishing message + have mtxA data waiting
+                
+                MPI_Wait(req + 2); // Wait on Last C to go through
                 MPI_Iprobe(serverRank, tagA, MPI_COMM_WORLD, & flag, status + 1);
+                
                 if (flag == 1) {
                     // Take Care of Last A
-                    printf("Need To Implement Exteremly Rare Test Case in Handle Body\n");
-                } else{
-                    MPI_Wait(req + 2); // Wait on Last C to go through
-                    mpi_error = MPI_Recv(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, status);
-                    handleSlaveFinish(trash, serverRank, tagFinilize, myrank, req); // Decide what to do with this shit!
-                    break;
+                    printf("Extremely rare case in HandleSlaveBody occured myrank: %d\n", myrank);
+                    
+                    // Recv A
+                    mpi_error = MPI_Get_count(status + 1, MPI_DOUBLE, &count);
+                    mpi_error = MPI_Recv(mtxA_one -> data[0], count, MPI_DOUBLE, serverRank, tagA, MPI_COMM_WORLD, status + 1);
+                    mtxC_one -> rows = count / m;
+                    mtxA_one -> rows = count / m;
+                    
+                    // Compute Final C
+                    err = matrixProductCacheObliv(mtxA_one, mtxB, mtxC_one, 0, mtxA_one->rows, 0, mtxA_one->cols, 0, mtxB->cols);
+                    
+                    // Blocking Send C
+                    mpi_error = MPI_Send(mtxC_one -> data[0], mtxA_one -> rows * mtxC_one -> cols, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD);
                 }
+                mpi_error = MPI_Recv(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, status);
+                break;
             }
         }
         
         holder = mtxA_one -> data [0];
-        mtxA_one -> data [0]; = mtxA_two;
+        mtxA_one -> data [0] = mtxA_two;
         mtxA_two = holder;
         mtxC_one -> rows = count / m;
         mtxA_one -> rows = count / m;
