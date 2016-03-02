@@ -11,6 +11,7 @@
 #include <time.h>
 #include "matrixFix.h"
 #include <mpi.h>
+#include <unistd.h>
 
 // Master Logic
 void handleMasterInit(matrix * mtxA, int * trash, int place[][2], int load, int m, int tagA, MPI_Status status, MPI_Request req []);
@@ -27,6 +28,7 @@ void handleSlaveBody(matrix * mtxA_one, matrix * mtxA_two, matrix * mtxB, matrix
 void handleServerFinish(matrix * mtxA, matrix * mtxB, matrix * mtxC, int n, int p, double starttime, double endtime, double totaltime);
 int * setPlace( int place[][2], int status);
 int * findPlace(int place[][2], int status);
+void printPlace(int place[][2], int nprocs);
 
 
 int main(int argc, char * argv[]) {
@@ -67,10 +69,10 @@ int main(int argc, char * argv[]) {
     if (myrank == serverRank) {
         mtxA = newMatrix(n, m);
         mtxC = newMatrix(n, p);
-        constMatrix(mtxA, 2);
-        constMatrix(mtxB, 3);
-        //randomizeMatrix(mtxA);
-        //randomizeMatrix(mtxB);
+        //constMatrix(mtxA, 4);
+        //constMatrix(mtxB, 3);
+        randomizeMatrix(mtxA);
+        randomizeMatrix(mtxB);
         starttime = MPI_Wtime();
     } else {
         mtxA_one = newMatrix(4 * load, m);
@@ -89,7 +91,7 @@ int main(int argc, char * argv[]) {
     // Loop Counter
     int i = 0;
     int flag = 0, tagA = 1, tagC = 2, tagInit = 3, tagMoreData = 4, tagFinilize = 5;
-    int place[nprocs][2], trash[1];
+    int place [nprocs][2], trash [1];
     trash[0] = -1;
     
     
@@ -104,7 +106,12 @@ int main(int argc, char * argv[]) {
         int j;
         for (j = 0; j < 2; j++) {
             for (i = 0; i < nprocs; i++) {
-                place[i][j] = 0;
+                
+                if (i == 0 && j == 0) {
+                    place[i][j] = 0;
+                } else {
+                    place[i][j] = -1;
+                }
             }
         }
     }
@@ -115,6 +122,13 @@ int main(int argc, char * argv[]) {
         // printf("Slave: %d made it past recive of B\n", myrank);
     }
     
+    /*
+     if (myrank == serverRank) {
+     printf("PLACE INIT\n");
+     printPlace(place, nprocs);
+     }
+     */
+    
     // Come up with new algorithim for storing who has what data in master
     // Come up with new Master Finish
     // Come up with new Slave Finish
@@ -124,18 +138,22 @@ int main(int argc, char * argv[]) {
             if (place[0][0] != n) {
                 //Master
                 MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, & flag, & status);
-                printf("SERVER: Flag Value =  %d \n", flag);
                 
+                printf("SERVER: Flag Value =  %d  TAG : %d \n tagA = 1, tagC = 2, tagInit = 3, tagMoreData = 4, tagFinilize = 5;\n", flag, status.MPI_TAG);
                 
                 if (flag == 1) {
-                    printf("Server: Recv Message from rank %d", status.MPI_SOURCE);
+                    printf("Server: Recv Message from rank %d\n", status.MPI_SOURCE);
                     if (status.MPI_TAG == tagInit ) {
                         handleMasterInit(mtxA, trash, place, load, m, tagA, status, req);
                         
                     } else if ( status.MPI_TAG == tagC ) {
+                        printf("MASTER: ENTER MASTER BODY\n");
                         handleMasterBody(mtxC, place, status);
+                        // printf("SERVER: mtxC\n");
+                        //   printMatrix(mtxC);
                         
                     } else if(status.MPI_TAG == tagMoreData) {
+                        printf("MASTER: ENTER more Data\n");
                         handleMasterRequestMore(mtxA, place, load, m, tagA, n, status, req);
                         
                     } else {
@@ -150,15 +168,15 @@ int main(int argc, char * argv[]) {
             } else {
                 // Master End condition
                 int hasData = 0, j;
-                
+                // Found Error -- Place Wahooo
                 for (i = 1; i < nprocs; i++) {
-                    for (j = 1; j < 2; j++) {
-                        if (place[i][j] != 0) {
+                    for (j = 0; j < 2; j++) {
+                        if (place[i][j] != -1) {
                             hasData += 1;
                         }
                     }
                 }
-                
+                printf("hasData = %d \n",hasData);
                 if (!hasData) {
                     // Case 1: Master did all the work (small matrix)
                     handleMasterFinishShort(trash, tagFinilize, nprocs, req);
@@ -179,6 +197,7 @@ int main(int argc, char * argv[]) {
                 //printf("Slave: %d made it Past Init \n", myrank);
             }
             handleSlaveBody(mtxA_one, mtxA_two, mtxB, mtxC_one, mtxC_two, serverRank, tagA, tagC, tagFinilize, tagMoreData, m, myrank);
+            break;
         }
     }
     
@@ -205,13 +224,23 @@ int main(int argc, char * argv[]) {
         handleServerFinish(mtxA, mtxB, mtxC, n, p, starttime, endtime, totaltime);
     }
     
-    // Release Heap Memory and Terminate MPI
-    deleteMatrix(mtxA);
-    // printf("Deleted Test Matrix A rank: %d\n",myrank);
-    deleteMatrix(mtxB);
-    //printf("Deleted Test Matrix B rank: %d\n",myrank);
-    deleteMatrix(mtxC);
-    //  printf("Deleted Matrix C rank: %d\n", myrank);
+    if (myrank == serverRank) {
+        // Release Heap Memory and Terminate MPI
+        deleteMatrix(mtxA);
+        // printf("Deleted Test Matrix A rank: %d\n",myrank);
+        deleteMatrix(mtxB);
+        //printf("Deleted Test Matrix B rank: %d\n",myrank);
+        deleteMatrix(mtxC);
+        
+    } else {
+        // Release Heap Memory and Terminate MPI
+        deleteMatrix(mtxA_one);
+        deleteMatrix(mtxA_two);
+        deleteMatrix(mtxC_one);
+        deleteMatrix(mtxC_two);
+        deleteMatrix(mtxB);
+    }
+    
     MPI_Finalize();
     printf("Closed MPI rank: %d\n", myrank);
     return 0;
@@ -223,6 +252,9 @@ int main(int argc, char * argv[]) {
  *
  */
 
+// Error # 1 Place can be 0!
+// Fix: Initialize Place to -1
+
 void handleMasterInit(matrix * mtxA, int * trash, int place[][2], int load, int m, int tagA, MPI_Status status, MPI_Request req []) {
     int mpi_error;
     printf("SERVER: Initilize Message from Process %d \n",status.MPI_SOURCE);
@@ -231,21 +263,27 @@ void handleMasterInit(matrix * mtxA, int * trash, int place[][2], int load, int 
     mpi_error = MPI_Isend(mtxA -> data[place[0][0]], load*m, MPI_DOUBLE, status.MPI_SOURCE, tagA, MPI_COMM_WORLD, \
                           req );
     // printf("SERVER: FINISHED SEND Init\n ");
+    printf("print source: %d\n",status.MPI_SOURCE);
     place[status.MPI_SOURCE][0] = place[0][0];
     place[0][0] += load;
+    
+    /*
+     printf("WHY IS PLACE NOT FING WORKING\n");
+     printPlace(place,2);
+     */
     
     //Free Request arrive Request
     MPI_Request_free(req + 1);
     //printf("Server: Made it past Free\n");
 }
 
-// Returns a pointer to the Lowest NON 0 entry of place
+// Returns a pointer to the Lowest NON -1 entry of place
 // If both are 0, print an error
 int * findPlace(int place[][2], int status) {
     int * holder;
-    if (place[status][0] > 0 && place[status][0] < place[status][1]) {
+    if (place[status][0] != -1 && place[status][0] < place[status][1]) {
         holder = & place[status][0];
-    } else if( place[status][1] > 0 && place[status][0] > place[status][1]) {
+    } else if( place[status][1] != -1 && place[status][0] > place[status][1]) {
         holder = & place[status][1];
     } else {
         printf("Function Find lowest Place requires both entries be non 0\n");
@@ -254,35 +292,34 @@ int * findPlace(int place[][2], int status) {
 }
 
 void handleMasterBody(matrix * mtxC, int place[][2], MPI_Status status) {
-      printf("SERVER: Data message recived from Process %d \n", status.MPI_SOURCE);
+    printf("SERVER: Data message recived from Process %d \n", status.MPI_SOURCE);
     int count, mpi_error, * holder;
     mpi_error = MPI_Get_count(&status, MPI_DOUBLE, &count);
     holder = findPlace(place, status.MPI_SOURCE);
     
     // Blocking Recv
     mpi_error = MPI_Recv(mtxC -> data[*holder], count, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status);
-    
-    //Everytime cont is receved set it equal to 0
-    * holder = 0;
-    
 }
 
 // Return either place with a 0 or the lowest place
 int * setPlace( int place[][2], int status) {
     int * holder;
-    if (place[status][0] == 0 || place[status][0] < place[status][1]) {
+    
+    if (place[status][0] < place[status][1]) {
         holder = & place[status][0];
-    } else if (place[status][1] == 0 || place[status][0] > place[status][1]) {
+        
+    } else if (place[status][0] > place[status][1]) {
         holder = & place[status][1];
         
     } else {
-        printf("ERROR: place[stat][0] == place[stat][1] != 0 in setPlace\n");
+        printf("ERROR: in setPlace\n");
     }
     return holder;
-    
 }
+
 void handleMasterRequestMore(matrix * mtxA, int place[][2], int load, int m, int tagA, int n, MPI_Status status, MPI_Request req []) {
     int mpi_error;
+    
     if (place[0][0] + load >= n) {
         load = n - place[0][0];
     }
@@ -291,15 +328,20 @@ void handleMasterRequestMore(matrix * mtxA, int place[][2], int load, int m, int
     mpi_error = MPI_Isend(mtxA -> data[place[0][0]], load*m, MPI_DOUBLE, status.MPI_SOURCE, tagA, MPI_COMM_WORLD, \
                           req);
     
-    int * holder = setPlace(place, status.MPI_SOURCE);
     
-    * holder = place[0][0];
+    
+    int * holder = setPlace(place, status.MPI_SOURCE);
+    * holder = place[0][0]; // issue
     place[0][0] += load;
     MPI_Request_free(req);
+    /*
+     printf("Print Place at bottom of request more \n");
+     printPlace(place,2);
+     */
 }
 
 void handleMasterCompute(matrix * mtxA, matrix * mtxB, matrix * mtxC, int place[][2]) {
-    printf("SERVER: Compute: row = %d\n",place[0]);
+    printf("SERVER: Compute: row = %d\n",place[0][0]);
     int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, place[0][0], place[0][0] + 1, 0, mtxA->cols, 0, mtxB->cols);
     place[0][0] += 1;
 }
@@ -315,7 +357,7 @@ void finish(int trash [], int tagFinilize, int nprocs, MPI_Request req []) {
     
     // Wait for all messages to go through to avoid seg fault
     MPI_Waitall(nprocs -1, req + 1, MPI_STATUS_IGNORE);
-     printf("SERVER: MADE IT PAST !FINAL! WAIT ALL");
+    printf("SERVER: MADE IT PAST !FINAL! WAIT ALL\n");
     
 }
 
@@ -329,18 +371,26 @@ void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place[]
     int  mpi_error, count, i, j;
     
     int * holder;
-   // printf("Master Entering Recive Data Loop \n");
+    printf("Master Finish Long: Entering Recive Data Loop \n");
+    
     for (i = 0; i < hasData; i++) {
         MPI_Probe(MPI_ANY_SOURCE, tagC, MPI_COMM_WORLD, & status);
         
-        if (place[status.MPI_SOURCE][0] < place[status.MPI_SOURCE][1] && place[status.MPI_SOURCE][0] != 0 ) {
+        if (place[status.MPI_SOURCE][0] < place[status.MPI_SOURCE][1] && place[status.MPI_SOURCE][0] != -1 ) {
             holder = & place[status.MPI_SOURCE][0];
             
-        } else if (place[status.MPI_SOURCE][0] > place[status.MPI_SOURCE][1] && place[status.MPI_SOURCE][1] != 0) {
+        } else if (place[status.MPI_SOURCE][0] > place[status.MPI_SOURCE][1] && place[status.MPI_SOURCE][1] != -1) {
             holder = & place[status.MPI_SOURCE][1];
             
+        } else if(place[status.MPI_SOURCE][0] == -1  && place[status.MPI_SOURCE][1] != -1) {
+            holder = & place[status.MPI_SOURCE][1];
+            
+        } else if (place[status.MPI_SOURCE][1] == -1  && place[status.MPI_SOURCE][0] != -1) {
+            holder = & place[status.MPI_SOURCE][0];
+            
         } else {
-            printf("Bad variable place :( in Finish Long\n");
+            // Both Places are -1 which is bad
+            printf("\n Both Place = -1 :( in Finish Long \n");
             
         }
         
@@ -348,6 +398,8 @@ void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place[]
         
         //Blocking Recv
         mpi_error = MPI_Recv(mtxC -> data[*holder], count, MPI_DOUBLE, status.MPI_SOURCE, tagC, MPI_COMM_WORLD, & status);
+        printf("Master final recv loop counter = %d, holder = %d \n",i, *holder);
+        * holder = -1;
     }
     
     //printf("MASTER FINISHED RECIVE LOOP \n");
@@ -357,7 +409,7 @@ void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place[]
 
 
 void handleSlaveInit(matrix * mtxA, matrix * mtxC, int m, int * trash, int serverRank, int tagInit, int tagA, int myrank, MPI_Status status) {
-    printf("Rank %d: Send Initialize\n",myrank);
+    printf("SLAVE: %d Send Initialize\n",myrank);
     // Blocking Send
     int mpi_error = MPI_Send(trash, 1, MPI_INT, serverRank, tagInit, MPI_COMM_WORLD);
     
@@ -372,6 +424,7 @@ void handleSlaveInit(matrix * mtxA, matrix * mtxC, int m, int * trash, int serve
     int rows = count / m;
     mtxA -> rows = rows;
     mtxC -> rows = rows;
+    printf("SLAVE: %d Finish Initialize\n",myrank);
 }
 
 void handleSlaveBody(matrix * mtxA_one, matrix * mtxA_two, matrix * mtxB, matrix * mtxC_one, matrix * mtxC_two, int serverRank, int tagA, int tagC, int tagFinilize, int tagMoreData, int m, int myrank) {
@@ -408,8 +461,8 @@ void handleSlaveBody(matrix * mtxA_one, matrix * mtxA_two, matrix * mtxB, matrix
         
         // Compute Second Product
         err = matrixProductCacheObliv(mtxA_one, mtxB, mtxC_one, calc, 2*calc + rem, 0, mtxA_one->cols, 0, mtxB->cols);
-        printf("mtxC below, i = %d\n",i);
-        printMatrix(mtxC_one);
+        // printf("mtxC below, i = %d\n",i);
+        // printMatrix(mtxC_one);
         
         // switch pointers
         holder = mtxC_two -> data[0];
@@ -428,6 +481,9 @@ void handleSlaveBody(matrix * mtxA_one, matrix * mtxA_two, matrix * mtxB, matrix
         
         
         // Zero mtxC_one in preperation for new matrix multiplication
+        //printf("mtxC below, i = %d\n",i);
+        //printMatrix(mtxC_one);
+        
         zeroMatrix(mtxC_one);
         
         
@@ -470,7 +526,7 @@ void handleSlaveBody(matrix * mtxA_one, matrix * mtxA_two, matrix * mtxB, matrix
                     // Blocking Send C
                     mpi_error = MPI_Send(mtxC_one -> data[0], mtxA_one -> rows * mtxC_one -> cols, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD);
                 }
-                printf("SLAVE: %d About to enter Final Recv\n",myrank); )
+                printf("SLAVE: %d About to enter Final Recv\n",myrank);
                 mpi_error = MPI_Recv(trash, 1, MPI_INT, serverRank, tagFinilize, MPI_COMM_WORLD, status);
                 break;
             }
@@ -484,7 +540,9 @@ void handleSlaveBody(matrix * mtxA_one, matrix * mtxA_two, matrix * mtxB, matrix
         //Reset rows and Columns of mtxA_one
         mtxC_one -> rows = count / m;
         mtxA_one -> rows = count / m;
+        printf("int i = %d\n",i);
         i++;
+        printf("int i = %d\n",i);
     }
 }
 
@@ -493,6 +551,9 @@ void handleSlaveBody(matrix * mtxA_one, matrix * mtxA_two, matrix * mtxB, matrix
 
 void handleServerFinish(matrix * mtxA, matrix * mtxB, matrix * mtxC, int n, int p, double starttime, double endtime, double totaltime) {
     //Time
+    //printf("Matrix C: \n");
+    //printMatrix(mtxC);
+    
     endtime = MPI_Wtime();
     totaltime = endtime - starttime;
     printf("Total Running Time: %5.3f\n",totaltime);
@@ -506,14 +567,15 @@ void handleServerFinish(matrix * mtxA, matrix * mtxB, matrix * mtxC, int n, int 
     matrix * mtxTest = newMatrix(n, p);
     
     matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
-    printf("Completed Test Multiplication \n");
     
+    printf("Completed Test Multiplication \n");
+    //  sleep(3);
     // Test Correctness  DEBUG
-     printf("Matrix Test: \n");
+    /* printf("Matrix Test: \n");
      printMatrix(mtxTest);
      printf("Matrix C: \n");
      printMatrix(mtxC);
-    
+     */
     
     if (subtractMatrix(mtxC, mtxTest)) {
         printf("\n Matrix Product Cache Obliv incorrect \n");
@@ -524,6 +586,17 @@ void handleServerFinish(matrix * mtxA, matrix * mtxB, matrix * mtxC, int n, int 
     printf("Deleted Test Matrix Server\n");
 }
 
+void printPlace(int place[][2], int nprocs) {
+    int i, j;
+    for (i = 0; i < nprocs; i ++) {
+        for (j = 0 ; j < 2; j++) {
+            printf("%d\t",place[i][j]);
+        }
+        printf("\n");
+    }
+    
+    
+}
 
 // Ancient Implementation - unpredictable on different machines
 /*
