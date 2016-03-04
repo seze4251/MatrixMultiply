@@ -53,10 +53,10 @@ int main(int argc, char * argv[]) {
         while (1) {
             printf("Please enter 3 ints to dimensionlize the Matrix followed by a int for load distribution (4 total) \n");
             int check = scanf("%d %d %d %d",&n, &m, &p, &load);
-            if (n > 0 && m > 0 && p > 0 && load > 0 && load <= n) {
+            if (n > 0 && m > 0 && p > 0 && load > 0 && load <= n && load > 1) {
                 break;
             } else {
-                printf("Please Enter Three Numbers that Are greater than 0 \n");
+                printf("Please Enter Three Numbers that Are greater than 0, load must be >= 2 \n");
             }
         }
         //printf("SERVER: load 1 = %d", load);
@@ -129,8 +129,8 @@ int main(int argc, char * argv[]) {
 
     
      if (myrank == serverRank) {
-     printf("PLACE INIT\n");
-     printPlace(place, nprocs);
+    // printf("PLACE INIT\n");
+    // printPlace(place, nprocs);
      }
      
     
@@ -145,7 +145,7 @@ int main(int argc, char * argv[]) {
                 MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, & flag, & status);
                 
                 if (flag == 1)
-                printf("SERVER: Flag Value =  %d  TAG : %d \n tagA = 1, tagC = 2, tagInit = 3, tagMoreData = 4, tagFinilize = 5;\n", flag, status.MPI_TAG);
+               // printf("SERVER: Flag Value =  %d  TAG : %d \n tagA = 1, tagC = 2, tagInit = 3, tagMoreData = 4, tagFinilize = 5;\n", flag, status.MPI_TAG);
                 
                 if (flag == 1) {
                 //    printf("Server: Recv Message from rank %d\n", status.MPI_SOURCE);
@@ -159,7 +159,7 @@ int main(int argc, char * argv[]) {
                         //   printMatrix(mtxC);
                         
                     } else if(status.MPI_TAG == tagMoreData) {
-                        printf("MASTER: ENTER more Data\n");
+                       // printf("MASTER: ENTER more Data\n");
                         handleMasterRequestMore(mtxA, place, load, m, tagA, n, status, req);
                         
                     } else {
@@ -182,7 +182,7 @@ int main(int argc, char * argv[]) {
                         }
                     }
                 }
-                printf("hasData = %d \n",hasData);
+                //printf("hasData = %d \n",hasData);
                 if (!hasData) {
                     // Case 1: Master did all the work (small matrix)
                     handleMasterFinishShort(trash, tagFinilize, nprocs, req);
@@ -276,8 +276,8 @@ void handleMasterInit(matrix * mtxA, int * trash, int place[][2], int load, int 
     place[0][0] += load;
     
     
-     printf("Place Master Init\n");
-     printPlace(place,2);
+   //  printf("Place Master Init\n");
+   //  printPlace(place,2);
     
     
     //Free Request arrive Request
@@ -305,9 +305,16 @@ void handleMasterBody(matrix * mtxC, int place[][2], MPI_Status status) {
     mpi_error = MPI_Get_count(&status, MPI_DOUBLE, &count);
     holder = findPlace(place, status.MPI_SOURCE);
     
+    printf("Handle Master Body: Holder = %d\n", *holder);
+    
     // Blocking Recv
+    
     mpi_error = MPI_Recv(mtxC -> data[*holder], count, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status);
-    //*holder = -1;
+    printf("handleMasterBody: Print Matrix C \n");
+    printMatrix(mtxC);
+    
+    // Do I need to do this??
+    *holder = -1;
 }
 
 // Return either place with a 0 or the lowest place
@@ -344,8 +351,8 @@ void handleMasterRequestMore(matrix * mtxA, int place[][2], int load, int m, int
     place[0][0] += load;
     MPI_Request_free(req);
     
-     printf("Print Place at bottom of request more \n");
-     printPlace(place,2);
+     //printf("Print Place at bottom of request more \n");
+    // printPlace(place,2);
      
 }
 
@@ -357,7 +364,7 @@ void handleMasterCompute(matrix * mtxA, matrix * mtxB, matrix * mtxC, int place[
 
 void finish(int trash [], int tagFinilize, int nprocs, MPI_Request req []) {
     // Send termination message to all processes
-    printf("SERVER: ENTER FINISH LOOP!!!! \n");
+   // printf("SERVER: ENTER FINISH LOOP!!!! \n");
     int i, mpi_error;
     for (i = 1; i < nprocs; i++) {
         mpi_error = MPI_Isend(trash, 1, MPI_INT, i, tagFinilize, MPI_COMM_WORLD, req + i);
@@ -407,7 +414,7 @@ void handleMasterFinishLong(matrix * mtxC, int nprocs, int trash [], int place[]
         
         //Blocking Recv
         mpi_error = MPI_Recv(mtxC -> data[*holder], count, MPI_DOUBLE, status.MPI_SOURCE, tagC, MPI_COMM_WORLD, & status);
-        printf("Master final recv loop counter = %d, holder = %d \n",i, *holder);
+      //  printf("Master FINAL: Recvieve loop counter = %d, holder = %d \n",i, *holder);
         * holder = -1;
     }
     
@@ -457,8 +464,12 @@ void handleSlaveBody(matrix * mtxA_one, matrix * mtxA_two, matrix * mtxB, matrix
         // Determine sizes of data
         calc = mtxA_one -> rows / 2;
         rem = mtxA_one -> rows % 2;
-
-        // Ask for More data
+        
+        printf("calc: %d, rem: %d\n",calc,rem);
+        printf("Matrix A_one at start of Loop A_one rows: %d   A_one cols:%d,  mtxC_one row :%d   col:%d  \n", mtxA_one -> rows, mtxA_one -> cols, mtxC_one -> rows, mtxC_one -> cols);
+        printMatrix(mtxA_one);
+        
+        // Ask For More Data
         mpi_error = MPI_Isend(trash, 1, MPI_INT, serverRank, tagMoreData, MPI_COMM_WORLD, req); //req
         
         
@@ -467,7 +478,7 @@ void handleSlaveBody(matrix * mtxA_one, matrix * mtxA_two, matrix * mtxB, matrix
         
         // Attempt Recv in mtxA_two
         MPI_Iprobe(serverRank, tagA, MPI_COMM_WORLD, & flag, status);
-        
+        printf("Flag: %d\n",flag);
         if (flag == 1) {
             
             mpi_error = MPI_Get_count( status, MPI_DOUBLE, &count);
@@ -476,40 +487,40 @@ void handleSlaveBody(matrix * mtxA_one, matrix * mtxA_two, matrix * mtxB, matrix
         }
         
         // Compute Second Product
-        printf("Matrix A  cal = %d, rem = %d \n",calc, rem);
-        printMatrix(mtxA_one);
+        //printf("Matrix A  cal = %d, rem = %d \n",calc, rem);
+        //printMatrix(mtxA_one);
         
         err = matrixProductCacheObliv(mtxA_one, mtxB, mtxC_one, calc, 2*calc + rem, 0, mtxA_one->cols, 0, mtxB->cols);
-        // printf("mtxC below, i = %d\n",i);
-        // printMatrix(mtxC_one);
+        
+        printf("Matrix C_one at end of mult rows: %d  cols:%d, \n", mtxC_one -> rows, mtxC_one -> cols);
+        printMatrix(mtxC_one);
         
         // switch pointers
         holder = mtxC_two -> data[0];
         mtxC_two -> data[0] = mtxC_one -> data [0];
         
-        //Would like to have this here!!!
+        
+
         // Wait for previous send mtxC request to go through
-        /*
         if (i != 0) {
             MPI_Wait(req+2, MPI_STATUS_IGNORE);
         }
-        */
-        
+
         // Send mtxC_two
+        printf("Sending MTXC_2 below, count: %d \n", mtxC_one -> rows * mtxC_one -> cols);
+        printMatrix(mtxC_two);
+        
         mpi_error = MPI_Isend(mtxC_two -> data[0], mtxC_one -> rows * mtxC_one -> cols, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req + 2); // req + 2
-        MPI_Wait(req+2, MPI_STATUS_IGNORE);
+        
         // Finish switching pointers
         mtxC_one -> data[0] = holder;
         
-        
         // Zero mtxC_one in preperation for new matrix multiplication
-        printf("mtxC below, i = %d\n",i);
-        printMatrix(mtxC_one);
         
         zeroMatrix(mtxC_one);
         
-        
         MPI_Wait(req, MPI_STATUS_IGNORE); // Wait for the more data request to be received
+        
         // Finish Recive or block Recv
         if (flag == 1) {
             // Finish Recv
@@ -559,10 +570,11 @@ void handleSlaveBody(matrix * mtxA_one, matrix * mtxA_two, matrix * mtxB, matrix
         mtxA_one -> data [0] = mtxA_two -> data[0];
         mtxA_two -> data[0] = holder;
         
-        //Reset rows and Columns of mtxA_one
+        //Reset rows and Columns of mtxA_one and two <------
         mtxC_one -> rows = count / m;
         mtxA_one -> rows = count / m;
-        
+        mtxA_two -> rows = count / m;
+        mtxC_two -> rows = count / m;
         i++;
         //;
         // Wait for previous send mtxC request to go through unfortunatly here!
