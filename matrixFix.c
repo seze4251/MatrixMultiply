@@ -61,7 +61,7 @@ void constMatrix(const matrix * mtx, const double value) {
 	}
     for ( i = 0; i < mtx -> rows; i++) {
         for ( j = 0; j < mtx -> cols; j++) {
-            ELEM(mtx,i,j) = j+i;
+            ELEM(mtx,i,j) = value;
         }
     }
 }

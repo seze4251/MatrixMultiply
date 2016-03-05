@@ -14,7 +14,6 @@
 
 
 // Requires command line input of m, n, and p
-// Assume Square Matrix Divisible by 4, n = m = p and divisible by 4
 int main(int argc, char * argv[]) {
     
     //Initialize Base Vars
@@ -54,17 +53,12 @@ int main(int argc, char * argv[]) {
     if (myrank == serverRank) {
         mtxA = newMatrix(n, m);
         mtxC = newMatrix(n, p);
-        //        randomizeMatrix(mtxA);
-        //        randomizeMatrix(mtxB);
-        constMatrix(mtxA,3);
-        constMatrix(mtxB,4);
-        //	printf("Server Process mtxA\n");
-        //	printMatrix(mtxA);
-        //	printf("\n\n");
+        randomizeMatrix(mtxA);
+        randomizeMatrix(mtxB);
     }
     double starttime, endtime, totaltime;
     if (myrank == serverRank) {
-         starttime = MPI_Wtime();
+        starttime = MPI_Wtime();
     }
     
     MPI_Bcast(mtxB -> data[0], m*p, MPI_DOUBLE, serverRank, MPI_COMM_WORLD);
@@ -101,13 +95,6 @@ int main(int argc, char * argv[]) {
         }
     }
     
-    /*	if (myrank == 1) {
-     printf("mtxA \n");
-     printMatrix(mtxA);
-     printf("\n mtxB\n");
-     printMatrix(mtxB);
-     }
-     */
     // Perform Matrix Multplicaiton
     int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
     printf("Process Number:%d  Error Code: %d\n", myrank, err);
@@ -115,33 +102,28 @@ int main(int argc, char * argv[]) {
     if (myrank == serverRank) {
         mtxA -> rows = n;
         mtxC -> rows = n;
-        printf("I made it this Far\n");
-        
         length = scatterSize;
+        
         for (i = 1; i < nprocs; i++) {
             if (i == nprocs -1) {
                 length = scatterSize + rem;
-                printf("Do I make it here\n");
             }
+            
             MPI_Status newS;
-            printf("I am sure this line is my error i = %d scattersize = %d length = %d  rem = %d\n",i,scatterSize,length,rem);
             int mpiER =  MPI_Recv(mtxC -> data [scatterSize + scatterSize * (i-1)], length * p, MPI_DOUBLE, i, i+tagC, MPI_COMM_WORLD, &newS);
-            printf("WAHOOOOOO\n");
         }
-        printf("Did I work?\n");
     } else {
         if (myrank == nprocs -1) {
             MPI_Send(mtxC -> data[0], (scatterSize + rem) * p, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD);
-            printf("Sure did\n");
+            
         } else {
             MPI_Send(mtxC -> data[0], scatterSize * p, MPI_DOUBLE, serverRank, myrank+tagC, MPI_COMM_WORLD);
-            printf("Sure Can!\n");
         }
         
     }
     
     MPI_Barrier(MPI_COMM_WORLD);
-    printf("made it here222222 Process Number: %d\n", myrank);
+    
     if (myrank == serverRank) {
         endtime = MPI_Wtime();
         totaltime = endtime - starttime;

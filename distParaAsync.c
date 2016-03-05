@@ -28,23 +28,6 @@ int main(int argc, char * argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     
-    // Ancient Implementation - unpredictable on different machines
-    /*
-     if (argc != 4) {
-     printf("Please enter 3 integers on the command line for n, m, and p where A[n,m] and B is [m,p] \n");
-     return -1;
-     }
-     
-     int n = atoi(argv[1]);
-     int m = atoi(argv[2]);
-     int p = atoi(argv[3]);
-     
-     if (n < 1 || m < 1 || p < 1) {
-     printf("n, m, and p must be greater or equal to 1");
-     return -2;
-     }
-     */
-    
     // Read in Data
     int buff[3], n, m, p;
     
@@ -124,17 +107,15 @@ int main(int argc, char * argv[]) {
         MPI_Wait(req + myrank, MPI_STATUS_IGNORE);
     }
     
-    printf("MADE IT To the Main Multiplication on PROCESS: %d\n", myrank);
     // Perform Matrix Multplicaiton
     int err = matrixProductCacheObliv(mtxA, mtxB, mtxC, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
-    printf("Post Multiplicaiton: Process Number:%d  Error Code: %d\n", myrank, err); //Debug
     
     if (myrank == serverRank) {
         
         for ( i = 1; i < nprocs; i++) {
             MPI_Request_free(req+i);
-            printf("Free requests on Server for: i = %d\n",i);
         }
+        
         // Resize rows of A and C
         mtxA -> rows = n;
         mtxC -> rows = n;
@@ -152,8 +133,8 @@ int main(int argc, char * argv[]) {
     } else {
         if (myrank == nprocs -1) {
             MPI_Isend(mtxC -> data[0], (scatterSize + rem) * p, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req+myrank);
-          	MPI_Wait(req + myrank, MPI_STATUS_IGNORE);
-
+            MPI_Wait(req + myrank, MPI_STATUS_IGNORE);
+            
         } else {
             MPI_Isend(mtxC -> data[0], scatterSize * p, MPI_DOUBLE, serverRank, tagC, MPI_COMM_WORLD, req + myrank);
            	MPI_Wait(req + myrank, MPI_STATUS_IGNORE);
@@ -161,11 +142,12 @@ int main(int argc, char * argv[]) {
         printf("Finished All Sends on Non Server Process\n");
     }
     
+    MPI_Waitall(nprocs - 1, req + 1, MPI_STATUS_IGNORE);
+    
     if (myrank == serverRank) {
-        
         endtime = MPI_Wtime();
         totaltime = endtime - starttime;
-        printf("Total Running Time: %5.3f",totaltime);
+        printf("Total Running Time: %6.4f",totaltime);
         
         // Print to File
         /*FILE * file = fopen("OutputParallel","a");
@@ -174,12 +156,8 @@ int main(int argc, char * argv[]) {
          */
         
         matrix * mtxTest = newMatrix(n, p);
-        printf("Created Test Matrix\n");
-        
         matrixProductCacheObliv(mtxA, mtxB, mtxTest, 0, mtxA->rows, 0, mtxA->cols, 0, mtxB->cols);
-        printf("Completed Test Multiplication \n");
-        MPI_Waitall(nprocs - 1, req + 1, MPI_STATUS_IGNORE);  // This wait all should be higher for timing but it hides communication being down here
-        printf("Finshed Waitall in Server Process\n");
+        
         if (subtractMatrix(mtxC, mtxTest)) {
             printf("\n Matrix Product Cache Obliv incorrect \n");
         } else {
@@ -190,7 +168,6 @@ int main(int argc, char * argv[]) {
         
     }
     
-
     deleteMatrix(mtxA);
     printf("Deleted Test Matrix A rank: %d\n",myrank);
     deleteMatrix(mtxB);
