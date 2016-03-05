@@ -131,7 +131,7 @@ int main(int argc, char * argv[]) {
         
         // Print to File
         FILE * file = fopen("OutputParallel","a");
-        fprintf(file, " %d \t\t %lu /n",m,total_t);
+        fprintf(file, " %d \t\t %5.4f /n",m,totaltime);
         fclose(file);
         
         matrix * mtxTest = newMatrix(n, p);
